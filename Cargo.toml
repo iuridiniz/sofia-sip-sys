@@ -1,0 +1,20 @@
+[package]
+authors = ["Iuri Diniz <iuridiniz@gmail.com>"]
+build = "build.rs"
+edition = "2018"
+links = "sofia-sip-ua"
+name = "sofia-sip-sys"
+version = "0.1.0"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+bindgen = "0.58.1"
+metadeps = "1.1.2"
+pkg-config = "0.3.19"
+
+[package.metadata.pkg-config]
+"sofia-sip-ua" = "1.12"
+
+[dependencies]
+errno = "0.2.7"
+optargs = "0.1.2"
