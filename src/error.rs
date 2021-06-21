@@ -4,7 +4,7 @@ pub enum Error {
 }
 
 // https://chromium.googlesource.com/chromiumos/docs/+/master/constants/errnos.md
-const ERROR_NONE: i32 = 0;
+pub const ERROR_NONE: i32 = 0;
 // const ERROR_EFAULT: i32 = 14;
 // const ERROR_EAFNOSUPPORT: i32 = 97;
 

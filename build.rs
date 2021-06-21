@@ -46,6 +46,17 @@ fn main() {
         .opaque_type("su_home_t")
         .opaque_type("su_root_t")
         .opaque_type("sip_t")
+        /* tags */
+        .allowlist_type("tagi_t")
+        .allowlist_type("tag_type_t")
+        .allowlist_type("tag_value_t")
+        .allowlist_var("tag_null")
+        .allowlist_var("tag_skip")
+        .allowlist_var("tag_next")
+        .allowlist_var("tag_any")
+        .allowlist_var("tag_filter")
+        /* nua tags */
+        .allowlist_var("nutag_url")
         /* libc */
         .allowlist_function("atexit")
         // .opaque_type()

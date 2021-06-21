@@ -1,5 +1,4 @@
-use super::error::errno;
-use super::error::Error;
+use super::error::{errno, Error, ERROR_NONE};
 use super::result::Result;
 use super::sys;
 
@@ -26,7 +25,7 @@ impl Root {
         }
 
         /* disable threads */
-        unsafe { sys::su_root_threading(root, 0) };
+        // unsafe { sys::su_root_threading(root, 0) };
 
         Ok(Root {
             c_ptr: root,
@@ -41,21 +40,31 @@ impl Root {
         };
     }
 
+    fn step(&mut self, timeout: Option<i64>) -> i64 {
+        let timeout = match timeout {
+            Some(x) if x > 0 && x < 1000 => x,
+            _ => 100,
+        };
+
+        unsafe { sys::su_root_step(self.c_ptr, timeout) }
+    }
+
     fn run(&mut self) {
-        use std::io::{self, Write};
-        // let mut max = 0;
         if self.running {
             return;
         }
         self.running = true;
+
         loop {
-            let remaining = unsafe { sys::su_root_step(self.c_ptr, 100) };
-            // max += 1;
-            // assert_eq!(remaining, 1000 - 100);
-            // print!("[{}:{}]", remaining, errno());
-            std::io::stdout().flush().unwrap();
+            /* clear errno */
+            errno();
+            let remaining = self.step(None);
+
             if remaining < 0 {
-                break;
+                let err = errno();
+                if err != ERROR_NONE {
+                    break;
+                }
             }
             if !self.running {
                 break;
