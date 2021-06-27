@@ -1,5 +1,3 @@
-// use super::error::errno;
-// use super::error::Error;
 use super::error::Error;
 use super::result::Result;
 use super::su;
@@ -21,19 +19,6 @@ impl NuaTags {
     pub(crate) fn to_tag_list<'a>(&'a self) -> Vec<sys::tagi_t> {
         let mut tags = vec![];
         if let Some(url) = &self.url {
-            // let t_value = url.t_value();
-            // let t_tag = url.t_tag();
-            // let tag = sys::tagi_t {
-            //     // t_tag: unsafe { sys::nutag_url.as_ptr() },
-            //     // t_value: c_str as *const _ as sys::tag_value_t,
-            //     t_value: t_value,
-            //     t_tag: t_tag,
-            // };
-            // // let bar = CString::new("sip:*:5070").unwrap();
-            // // let tag = sys::tagi_t {
-            // //     t_tag: unsafe { sys::nutag_url.as_ptr() as *const sys::tag_type_s },
-            // //     t_value: bar.as_ptr() as isize,
-            // // };
             tags.push(url.t_tagi());
         }
         tags
@@ -207,40 +192,16 @@ impl<'a> Nua<'a> {
         }
         let nua_ptr = self as *mut Nua as *mut sys::nua_magic_t;
 
-        // let bar = CString::new("sip:*:5070").unwrap();
-        // let tag_url = sys::tagi_t {
-        //     t_tag: unsafe { sys::nutag_url.as_ptr() as *const sys::tag_type_s },
-        //     t_value: bar.as_ptr() as isize,
-        // };
-
-        // let tag_null = sys::tagi_t {
-        //     t_tag: std::ptr::null() as *const sys::tag_type_s,
-        //     t_value: 0 as isize,
-        // };
         let tags = self.create_tags.to_tag_list();
         let tags = tags.as_slice();
-
-        // dbg!(a);
-        // dbg!(b);
 
         let nua_sys = unsafe {
             sys::nua_create(
                 self.root.c_ptr,
                 Some(nua_app_callback_glue),
                 nua_ptr,
-                // sys::tag_next.as_ptr() as *const sys::tag_type_s,
-                // self.create_tags.as_slice().as_ptr() as isize,
-                // sys::nutag_url.as_ptr() as *const sys::tag_type_s,
-                // bar.as_ptr() as isize,
                 sys::tag_next.as_ptr() as *const sys::tag_type_s,
                 tags.as_ptr() as isize,
-                // self.create_tags.as_slice().as_ptr() as isize,
-                // std::ptr::null() as *const sys::tag_type_s,
-                // 0 as isize,
-                // tag_url.t_tag,
-                // tag_url.t_value,
-                // tag_null.t_tag,
-                // tag_null.t_value,
             )
         };
         dbg!(nua_sys);
