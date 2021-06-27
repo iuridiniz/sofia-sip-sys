@@ -3,7 +3,8 @@ authors = ["Iuri Diniz <iuridiniz@gmail.com>"]
 build = "build.rs"
 description = "Rust bindings for sofia-sip"
 edition = "2018"
-license = "LGPL-2.1-or-later or MIT"
+# the bindings are MIT, but sofia-sip-sys is LGPL-2.1-or-later.
+license = "MIT"
 license-file = "LICENSE"
 links = "sofia-sip-ua"
 name = "sofia-sip"
