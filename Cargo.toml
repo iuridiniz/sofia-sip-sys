@@ -6,7 +6,7 @@ edition = "2018"
 license = "LGPL or MIT"
 license-file = "LICENSE"
 links = "sofia-sip-ua"
-name = "sofia-sip-sys"
+name = "sofia-sip"
 repository = "https://github.com/iuridiniz/sofia-sip-sys/"
 version = "0.0.1"
 
