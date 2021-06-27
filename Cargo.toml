@@ -1,11 +1,15 @@
 [package]
 authors = ["Iuri Diniz <iuridiniz@gmail.com>"]
 build = "build.rs"
+description = "Rust bindings for sofia-sip"
 edition = "2018"
+license = "LPGL or MIT"
+license-file = "LICENSE"
 links = "sofia-sip-ua"
 name = "sofia-sip-sys"
 repository = "https://github.com/iuridiniz/sofia-sip-sys/"
 version = "0.0.1"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
