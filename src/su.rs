@@ -49,6 +49,10 @@ impl Root {
         unsafe { sys::su_root_step(self.c_ptr, timeout) }
     }
 
+    fn quit(&mut self) {
+        self.running = false;
+    }
+
     fn run(&mut self) {
         if self.running {
             return;
@@ -144,4 +148,10 @@ pub fn main_loop_run() -> Result<()> {
     let root = get_default_root_as_mut()?;
     root.run();
     Ok(())
+}
+
+pub fn main_loop_quit() {
+    if let Ok(root) = get_default_root_as_mut() {
+        root.quit()
+    };
 }

@@ -57,6 +57,7 @@ fn main() {
         .allowlist_var("tag_filter")
         /* nua tags */
         .allowlist_var("nutag_url")
+        .allowlist_function("urltag_url_v")
         /* libc */
         .allowlist_function("atexit")
         // .opaque_type()

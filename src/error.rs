@@ -1,6 +1,7 @@
 #[derive(Debug)]
 pub enum Error {
     InitError,
+    UrlError,
 }
 
 // https://chromium.googlesource.com/chromiumos/docs/+/master/constants/errnos.md
@@ -16,6 +17,12 @@ impl GetAndResetErrno for errno::Errno {
         let old = self.0;
         errno::set_errno(errno::Errno(ERROR_NONE));
         old
+    }
+}
+
+impl From<std::ffi::NulError> for Error {
+    fn from(_err: std::ffi::NulError) -> Self {
+        Error::UrlError
     }
 }
 

@@ -1,6 +1,8 @@
 #include <sofia-sip/nua.h>
 #include <stdlib.h>
 
+//clang ``pkg-config --cflags sofia-sip-ua` wrapper.h
+//cpp `pkg-config --cflags sofia-sip-ua` wrapper.h
 // int tttttttttttttttt;
 // TAG_NEXT(a);
 // NTATAG_USER_VIA(1),
@@ -11,3 +13,8 @@
 //     NUTAG_AUTO_INVITE_100(0),
 //     TAG_IF(!strchr(profile->sipip, ':'), SOATAG_AF(SOA_AF_IP4_ONLY)),
 //     TAG_END()
+
+// TAG_NEXT(A);
+// tag_next, (tag_value_t)(A);
+// NUTAG_URL("*:5060");
+// nutag_url, urltag_url_v("*:5060");

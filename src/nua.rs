@@ -4,6 +4,7 @@ use super::error::Error;
 use super::result::Result;
 use super::su;
 use super::sys;
+use super::Url;
 
 use std::ffi::CStr;
 
@@ -13,12 +14,29 @@ type MessagesCallback = fn();
 
 #[derive(optargs::OptStruct)]
 pub struct NuaTags {
-    pub url: Option<String>,
+    pub url: Option<Url>,
 }
 
 impl NuaTags {
-    fn to_tag_list(&self) -> Vec<sys::tagi_t> {
-        vec![]
+    pub(crate) fn to_tag_list<'a>(&'a self) -> Vec<sys::tagi_t> {
+        let mut tags = vec![];
+        if let Some(url) = &self.url {
+            // let t_value = url.t_value();
+            // let t_tag = url.t_tag();
+            // let tag = sys::tagi_t {
+            //     // t_tag: unsafe { sys::nutag_url.as_ptr() },
+            //     // t_value: c_str as *const _ as sys::tag_value_t,
+            //     t_value: t_value,
+            //     t_tag: t_tag,
+            // };
+            // // let bar = CString::new("sip:*:5070").unwrap();
+            // // let tag = sys::tagi_t {
+            // //     t_tag: unsafe { sys::nutag_url.as_ptr() as *const sys::tag_type_s },
+            // //     t_value: bar.as_ptr() as isize,
+            // // };
+            tags.push(url.t_tagi());
+        }
+        tags
     }
 }
 
@@ -26,6 +44,7 @@ pub struct Nua<'a> {
     messages_callback: Option<MessagesCallback>,
     root: &'a su::Root,
     pub(crate) c_ptr: *mut sys::nua_t,
+    create_tags: crate::Tags,
 }
 
 /* Incomplete:
@@ -153,49 +172,13 @@ impl<'a> Nua<'a> {
         Nua::new_with_root(su::get_default_root()?, tags)
     }
 
-    fn _create(&mut self) {
-        if !self.c_ptr.is_null() {
-            return;
-        }
-        let nua_ptr = self as *mut Nua as *mut sys::nua_magic_t;
-
-        let nua_sys = unsafe {
-            sys::nua_create(
-                self.root.c_ptr,
-                Some(nua_app_callback_glue),
-                nua_ptr,
-                std::ptr::null() as *const sys::tag_type_s,
-                0 as isize,
-            )
-        };
-
-        self.c_ptr = nua_sys;
-    }
-
     pub fn new_with_root(root: &'a su::Root, tags: crate::Tags) -> Result<Nua<'a>> {
-        let mut nua = Nua {
+        let nua = Nua {
             messages_callback: None,
             root: root,
             c_ptr: std::ptr::null_mut(),
+            create_tags: tags,
         };
-
-        let tags = tags.to_tag_list().as_ptr();
-
-        // let nua_ptr: *mut sys::nua_magic_t = &mut nua as *mut Nua as *mut sys::nua_magic_t;
-
-        // dbg!(nua_ptr);
-
-        // let nua_sys = unsafe {
-        //     sys::nua_create(
-        //         nua.root.c_ptr,
-        //         Some(nua_app_callback_glue),
-        //         nua_ptr,
-        //         std::ptr::null() as *const sys::tag_type_s,
-        //         tags as isize,
-        //     )
-        // };
-
-        // nua.c_ptr = nua_sys;
 
         Ok(nua)
     }
@@ -203,7 +186,7 @@ impl<'a> Nua<'a> {
     pub fn messages_connect(&mut self, cb: MessagesCallback) {
         self._create();
         self.messages_callback = Some(cb);
-        unsafe { sys::nua_shutdown(self.c_ptr) };
+        // unsafe { sys::nua_shutdown(self.c_ptr) };
     }
 
     fn app_callback(&mut self, event: Event, status: u32, phrase: &str) {
@@ -216,6 +199,53 @@ impl<'a> Nua<'a> {
         } else {
             println!("callback is None")
         }
+    }
+
+    fn _create(&mut self) {
+        if !self.c_ptr.is_null() {
+            return;
+        }
+        let nua_ptr = self as *mut Nua as *mut sys::nua_magic_t;
+
+        // let bar = CString::new("sip:*:5070").unwrap();
+        // let tag_url = sys::tagi_t {
+        //     t_tag: unsafe { sys::nutag_url.as_ptr() as *const sys::tag_type_s },
+        //     t_value: bar.as_ptr() as isize,
+        // };
+
+        // let tag_null = sys::tagi_t {
+        //     t_tag: std::ptr::null() as *const sys::tag_type_s,
+        //     t_value: 0 as isize,
+        // };
+        let tags = self.create_tags.to_tag_list();
+        let tags = tags.as_slice();
+
+        // dbg!(a);
+        // dbg!(b);
+
+        let nua_sys = unsafe {
+            sys::nua_create(
+                self.root.c_ptr,
+                Some(nua_app_callback_glue),
+                nua_ptr,
+                // sys::tag_next.as_ptr() as *const sys::tag_type_s,
+                // self.create_tags.as_slice().as_ptr() as isize,
+                // sys::nutag_url.as_ptr() as *const sys::tag_type_s,
+                // bar.as_ptr() as isize,
+                sys::tag_next.as_ptr() as *const sys::tag_type_s,
+                tags.as_ptr() as isize,
+                // self.create_tags.as_slice().as_ptr() as isize,
+                // std::ptr::null() as *const sys::tag_type_s,
+                // 0 as isize,
+                // tag_url.t_tag,
+                // tag_url.t_value,
+                // tag_null.t_tag,
+                // tag_null.t_value,
+            )
+        };
+        dbg!(nua_sys);
+
+        self.c_ptr = nua_sys;
     }
 
     fn _destroy(&mut self) {
