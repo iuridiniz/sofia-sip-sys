@@ -2,9 +2,11 @@ use super::error::Error;
 use super::result::Result;
 use super::su;
 use super::sys;
+use super::Tag;
 use super::Url;
 
 use std::ffi::CStr;
+use std::ffi::CString;
 
 use std::convert::TryFrom;
 
@@ -25,13 +27,90 @@ impl NuaTags {
     }
 }
 
-pub struct Nua<'a> {
+#[derive(Debug, Clone, Copy)]
+pub struct Nua {
     messages_callback: Option<MessagesCallback>,
-    root: &'a su::Root,
+    // root: Option<&'a su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
-    create_tags: crate::Tags,
+    // create_tags: crate::Tags,
 }
 
+#[derive(Debug)]
+pub struct NuaBuilder {
+    nua: Nua,
+    root: Option<su::Root>,
+    tags: Vec<Tag>,
+    callback: Option<MessagesCallback>, /* may be a vec of callbacks */
+}
+
+impl NuaBuilder {
+    pub fn default() -> Self {
+        NuaBuilder {
+            nua: Nua::_new(),
+            root: None,
+            tags: Vec::<Tag>::new(),
+            callback: None,
+        }
+    }
+    pub fn tag(mut self, tag: Tag) -> Self {
+        self.tags.push(tag);
+        self
+    }
+    pub fn callback(mut self, cb: MessagesCallback) -> Self {
+        self.callback = Some(cb);
+        self
+    }
+    pub fn root(mut self, root: su::Root) -> Self {
+        self.root = Some(root);
+        self
+    }
+
+    pub fn create(&self) -> Result<Box<Nua>> {
+        let mut nua = Box::new(self.nua);
+        let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
+        // dbg!(nua_ptr);
+        // dbg!(&nua as *const _);
+        // dbg!(&*nua as *const _);
+
+        let root = match &self.root {
+            Some(root) => root.c_ptr,
+            _ => crate::su::get_default_root()?.c_ptr,
+        };
+
+        // /* convert tags that are string to c_string */
+        // let mut tags = Vec::<&Tag>::new();
+
+        // for tag in self.tags {
+        //     let tag = tag.convert()?;
+        //     tags.push(&tag);
+        // }
+        let mut sys_tags = Vec::<sys::tagi_t>::new();
+        for tag in &self.tags {
+            sys_tags.push(tag.item());
+        }
+
+        /* MEMORY FOR C STRING */
+        // let mut sys_tags = Vec::<sys::tagi_t>::new();
+        // let v = CString::new("sip:*:5090")?;
+
+        // sys_tags.push(sys::tagi_t {
+        //     t_tag: Tag::NuUrl("".to_string()).symbol(),
+        //     t_value: v.as_ptr() as isize,
+        // });
+
+        let tag_null = Tag::Null;
+
+        sys_tags.push(tag_null.item());
+
+        let sys_tags = sys_tags.as_slice();
+        dbg!(sys_tags);
+
+        let callback = nua_app_callback_glue;
+        let magic = nua_ptr;
+        nua.c_ptr = Nua::_create(root, Some(callback), magic, Some(sys_tags))?;
+        Ok(nua)
+    }
+}
 /* Incomplete:
 perl -lane 'print if s/pub const (nua_event_e_(.*)): nua_event_e = (\d+);/$1,/'  $(find $PWD -name bindings.rs | head -n1)
 */
@@ -141,9 +220,9 @@ extern "C" fn nua_app_callback_glue(
         // let sys_nua: _nua;
         let nua: *mut Nua = _magic as *mut Nua;
 
-        unsafe {
-            (*nua).app_callback(event, status, &phrase);
-        }
+        // unsafe {
+        //     (*nua).app_callback(event, status, &phrase);
+        // }
     }) {
         // Code here must be panic-free.
         eprintln!("PANIC!! while calling a callback from C: {:?}", e);
@@ -152,72 +231,118 @@ extern "C" fn nua_app_callback_glue(
     }
 }
 
-impl<'a> Nua<'a> {
-    pub fn new(tags: crate::Tags) -> Result<Nua<'a>> {
-        Nua::new_with_root(su::get_default_root()?, tags)
-    }
-
-    pub fn new_with_root(root: &'a su::Root, tags: crate::Tags) -> Result<Nua<'a>> {
-        let nua = Nua {
+impl Nua {
+    pub(crate) fn _new() -> Nua {
+        Nua {
             messages_callback: None,
-            root: root,
+            // root: None,
             c_ptr: std::ptr::null_mut(),
-            create_tags: tags,
-        };
-
-        Ok(nua)
+            // create_tags: tags,
+        }
     }
+    pub(crate) fn _create(
+        root: *mut sys::su_root_t,
+        callback: sys::nua_callback_f,
+        magic: *mut sys::nua_magic_t,
+        tags: Option<&[sys::tagi_t]>,
+    ) -> Result<*mut sys::nua_s> {
+        if root.is_null() {
+            return Err(Error::InitError);
+        }
+        if callback.is_none() {
+            return Err(Error::InitError);
+        }
+        if magic.is_null() {
+            return Err(Error::InitError);
+        }
 
-    pub fn messages_connect(&mut self, cb: MessagesCallback) {
-        self._create();
-        self.messages_callback = Some(cb);
-        // unsafe { sys::nua_shutdown(self.c_ptr) };
-    }
+        let tag_name: *const sys::tag_type_s;
+        let tag_value: isize;
 
-    fn app_callback(&mut self, event: Event, status: u32, phrase: &str) {
-        println!(
-            "Callback event: {:?} // status: {:?} // phrase: {:?}",
-            event, status, phrase
-        );
-        if let Some(cb) = self.messages_callback {
-            cb()
+        if tags.is_none() {
+            tag_name = std::ptr::null();
+            tag_value = 0;
         } else {
-            println!("callback is None")
+            tag_name = unsafe { sys::tag_next.as_ptr() };
+            tag_value = tags.unwrap().as_ptr() as isize;
         }
-    }
 
-    fn _create(&mut self) {
-        if !self.c_ptr.is_null() {
-            return;
+        let nua_sys = unsafe { sys::nua_create(root, callback, magic, tag_name, tag_value) };
+
+        if nua_sys.is_null() {
+            /* failed to create */
+            return Err(Error::InitError);
         }
-        let nua_ptr = self as *mut Nua as *mut sys::nua_magic_t;
 
-        let tags = self.create_tags.to_tag_list();
-        let tags = tags.as_slice();
+        // unsafe { sys::nua_shutdown(nua_sys) }
 
-        let nua_sys = unsafe {
-            sys::nua_create(
-                self.root.c_ptr,
-                Some(nua_app_callback_glue),
-                nua_ptr,
-                sys::tag_next.as_ptr() as *const sys::tag_type_s,
-                tags.as_ptr() as isize,
-            )
-        };
-        dbg!(nua_sys);
-
-        self.c_ptr = nua_sys;
+        Ok(nua_sys)
     }
+    // pub fn new(tags: crate::Tags) -> Result<Nua<'a>> {
+    //     Nua::new_with_root(su::get_default_root()?, tags)
+    // }
 
-    fn _destroy(&mut self) {
-        unsafe {
-            sys::nua_destroy(self.c_ptr);
-        }
-    }
+    // pub fn new_with_root(root: &'a su::Root, tags: crate::Tags) -> Result<Nua<'a>> {
+    //     let nua = Nua {
+    //         messages_callback: None,
+    //         root: Some(root),
+    //         c_ptr: std::ptr::null_mut(),
+    //         // create_tags: tags,
+    //     };
+
+    //     Ok(nua)
+    // }
+
+    // pub fn messages_connect(&mut self, cb: MessagesCallback) {
+    //     self._create();
+    //     self.messages_callback = Some(cb);
+    //     // unsafe { sys::nua_shutdown(self.c_ptr) };
+    // }
+
+    // fn app_callback(&mut self, event: Event, status: u32, phrase: &str) {
+    //     println!(
+    //         "Callback event: {:?} // status: {:?} // phrase: {:?}",
+    //         event, status, phrase
+    //     );
+    //     if let Some(cb) = self.messages_callback {
+    //         cb()
+    //     } else {
+    //         println!("callback is None")
+    //     }
+    // }
+
+    // fn _create(&mut self) {
+    //     if !self.c_ptr.is_null() {
+    //         return;
+    //     }
+    //     let nua_ptr = self as *mut Nua as *mut sys::nua_magic_t;
+
+    //     // let tags = self.create_tags.to_tag_list();
+    //     // let tags = tags.as_slice();
+
+    //     // let nua_sys = unsafe {
+    //     //     sys::nua_create(
+    //     //         self.root.c_ptr,
+    //     //         Some(nua_app_callback_glue),
+    //     //         nua_ptr,
+    //     //         sys::tag_next.as_ptr() as *const sys::tag_type_s,
+    //     //         tags.as_ptr() as isize,
+    //     //     )
+    //     // };
+    //     // dbg!(nua_sys);
+
+    //     // self.c_ptr = nua_sys;
+    // }
+
+    // fn _destroy(&mut self) {
+    //     unsafe {
+    //         sys::nua_destroy(self.c_ptr);
+    //     }
+    // }
 }
 
-impl<'a> Drop for Nua<'a> {
-    fn drop(&mut self) {
-        self._destroy()
-    }
-}
+// impl<'a> Drop for Nua<'a> {
+//     fn drop(&mut self) {
+//         self._destroy()
+//     }
+// }

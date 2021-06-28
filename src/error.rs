@@ -1,7 +1,10 @@
 #[derive(Debug)]
 pub enum Error {
     InitError,
+    CreateNuaError,
     UrlError,
+    ConvertToCStringError,
+    MissingTagConversion,
 }
 
 // https://chromium.googlesource.com/chromiumos/docs/+/master/constants/errnos.md
@@ -22,7 +25,7 @@ impl GetAndResetErrno for errno::Errno {
 
 impl From<std::ffi::NulError> for Error {
     fn from(_err: std::ffi::NulError) -> Self {
-        Error::UrlError
+        Error::ConvertToCStringError
     }
 }
 

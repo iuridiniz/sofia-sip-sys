@@ -7,6 +7,7 @@ static INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 static mut DEFAULT_ROOT: Option<Root> = None;
 
+#[derive(Debug)]
 pub struct Root {
     pub(crate) c_ptr: *mut sys::su_root_t,
     running: bool,
@@ -49,11 +50,11 @@ impl Root {
         unsafe { sys::su_root_step(self.c_ptr, timeout) }
     }
 
-    fn quit(&mut self) {
+    pub fn quit(&mut self) {
         self.running = false;
     }
 
-    fn run(&mut self) {
+    pub fn run(&mut self) {
         if self.running {
             return;
         }
@@ -139,8 +140,8 @@ fn get_default_root_as_mut() -> Result<&'static mut Root> {
     Ok(root)
 }
 
-pub fn get_default_root() -> Result<&'static Root> {
-    let root: &Root = get_default_root_as_mut()?;
+pub fn get_default_root() -> Result<&'static mut Root> {
+    let root = get_default_root_as_mut()?;
     Ok(root)
 }
 
