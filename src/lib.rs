@@ -3,9 +3,11 @@ pub mod nua;
 pub mod result;
 pub mod su;
 pub mod sys;
+pub mod tag;
 pub use nua::Nua;
-pub use su::main_loop_quit;
-pub use su::main_loop_run;
+pub use nua::NuaBuilder;
+pub use su::get_default_root;
+pub use tag::Tag;
 
 use std::convert::TryFrom;
 use std::ffi::CString;
