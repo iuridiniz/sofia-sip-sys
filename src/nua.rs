@@ -27,7 +27,7 @@ impl NuaTags {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Nua {
     messages_callback: Option<MessagesCallback>,
     // root: Option<&'a su::Root>,
@@ -66,7 +66,7 @@ impl NuaBuilder {
     }
 
     pub fn create(&self) -> Result<Box<Nua>> {
-        let mut nua = Box::new(self.nua);
+        let mut nua = Box::new(self.nua.clone());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
         // dbg!(nua_ptr);
         // dbg!(&nua as *const _);
@@ -247,22 +247,24 @@ impl Nua {
         tags: Option<&[sys::tagi_t]>,
     ) -> Result<*mut sys::nua_s> {
         if root.is_null() {
-            return Err(Error::InitError);
+            return Err(Error::CreateNuaError);
         }
         if callback.is_none() {
-            return Err(Error::InitError);
+            return Err(Error::CreateNuaError);
         }
         if magic.is_null() {
-            return Err(Error::InitError);
+            return Err(Error::CreateNuaError);
         }
 
         let tag_name: *const sys::tag_type_s;
         let tag_value: isize;
 
         if tags.is_none() {
+            /* TAG_NULL */
             tag_name = std::ptr::null();
             tag_value = 0;
         } else {
+            /* TAG_NEXT */
             tag_name = unsafe { sys::tag_next.as_ptr() };
             tag_value = tags.unwrap().as_ptr() as isize;
         }
@@ -271,7 +273,7 @@ impl Nua {
 
         if nua_sys.is_null() {
             /* failed to create */
-            return Err(Error::InitError);
+            return Err(Error::CreateNuaError);
         }
 
         // unsafe { sys::nua_shutdown(nua_sys) }
@@ -334,15 +336,19 @@ impl Nua {
     //     // self.c_ptr = nua_sys;
     // }
 
-    // fn _destroy(&mut self) {
-    //     unsafe {
-    //         sys::nua_destroy(self.c_ptr);
-    //     }
-    // }
+    fn _destroy(&mut self) {
+        if self.c_ptr.is_null() {
+            return;
+        }
+        unsafe {
+            sys::nua_destroy(self.c_ptr);
+            self.c_ptr = std::ptr::null_mut();
+        }
+    }
 }
 
-// impl<'a> Drop for Nua<'a> {
-//     fn drop(&mut self) {
-//         self._destroy()
-//     }
-// }
+impl Drop for Nua {
+    fn drop(&mut self) {
+        self._destroy()
+    }
+}
