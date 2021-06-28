@@ -209,12 +209,17 @@ extern "C" fn nua_app_callback_glue(
     _tags: *mut sys::tagi_t,
 ) {
     dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
+
     /*
     Panics can happen pretty much anywhere in Rust code.
-    So to be safe, we need to wrap our callback body inside catch_unwind
+    So to be safe, we need to wrap our callback body inside catch_unwind.
+    see: https://doc.rust-lang.org/nomicon/ffi.html#ffi-and-panics
     */
     if let Err(e) = std::panic::catch_unwind(|| {
+        /* This call is expect to not panic if sofia does not changes their api */
+        /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
+        dbg!(event);
         let status = _status as u32;
         let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
         // let sys_nua: _nua;
