@@ -332,7 +332,7 @@ mod tests {
         wrap(||{
             let b = NuaBuilder::default();
 
-            let mut _nua = b.create().unwrap();
+            b.create().unwrap();
         });
     }
 
@@ -345,7 +345,7 @@ mod tests {
             let b = NuaBuilder::default();
             let b = b.root(root);
 
-            let _nua = b.create().unwrap();
+            b.create().unwrap();
         })
     }
 
@@ -362,7 +362,7 @@ mod tests {
             let b = b.root(root);
             let b = b.tag(url);
 
-            let _nua = b.create().unwrap();
+            b.create().unwrap();
         })
     }
 }

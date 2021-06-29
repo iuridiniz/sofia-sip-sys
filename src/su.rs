@@ -259,7 +259,7 @@ pub(crate) mod tests {
     #[serial]
     fn create_root() {
         wrap(|| {
-            let mut _root = Root::new().unwrap();
+            Root::new().unwrap();
         });
     }
 
