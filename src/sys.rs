@@ -98,6 +98,9 @@ mod tests {
             assert_eq!(remaining, 0);
             assert_eq!(errno(), ERROR_NONE);
 
+            /* destroy nua */
+            sys::nua_destroy(nua);
+
             /* deinit root object */
             sys::su_root_destroy(root);
             assert_eq!(errno(), ERROR_NONE);
@@ -181,6 +184,9 @@ mod tests {
             let remaining = sys::su_root_step(root, 100);
             assert_eq!(remaining, -1);
             assert_eq!(errno(), ERROR_NONE);
+
+            /* destroy nua */
+            sys::nua_destroy(nua);
 
             /* deinit root object */
             sys::su_root_destroy(root);
@@ -270,11 +276,14 @@ mod tests {
                 root,
                 Some(cb),
                 opaque_type_ptr,
+                // sys::nutag_url.as_ptr(),
                 null as *const sys::tag_type_s,
                 0 as isize,
             );
             assert!(!nua.is_null());
             assert_eq!(errno(), ERROR_EAFNOSUPPORT, "ERROR_EAFNOSUPPORT");
+
+            sys::nua_shutdown(nua);
 
             /* enter main loop for processing of messages () */
             let mut remaining = 0;
@@ -286,6 +295,10 @@ mod tests {
                     break;
                 }
             }
+
+            /* destroy nua */
+            sys::nua_destroy(nua);
+
             /* deinit root object */
             sys::su_root_destroy(root);
             assert_eq!(errno(), ERROR_NONE);
