@@ -10,15 +10,14 @@ pub use crate::nua::builder::Builder;
 pub use crate::nua::event::Event;
 pub use crate::nua::event::EventClosure;
 
-
-pub struct Nua {
-    pub(crate) root: Option<su::Root>,
+pub struct Nua<'a> {
+    pub(crate) root: Option<&'a su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
     pub(crate) closure: Option<Box<EventClosure>>,
     shutdown_completed: bool,
 }
 
-impl std::fmt::Debug for Nua {
+impl<'a> std::fmt::Debug for Nua<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         f.debug_struct("Nua")
             .field("Self", &(&*self as *const Nua))
@@ -28,8 +27,8 @@ impl std::fmt::Debug for Nua {
     }
 }
 
-impl Nua {
-    pub(crate) fn _new() -> Nua {
+impl<'a> Nua<'a> {
+    pub(crate) fn _new() -> Nua<'a> {
         Nua {
             root: None,
             closure: None,
@@ -37,6 +36,7 @@ impl Nua {
             shutdown_completed: false,
         }
     }
+
     pub fn root(&self) -> &su::Root {
         match &self.root {
             Some(root) => root,
@@ -125,7 +125,7 @@ impl Nua {
     }
 }
 
-impl Drop for Nua {
+impl<'a> Drop for Nua<'a> {
     fn drop(&mut self) {
         self._destroy()
     }
@@ -156,7 +156,7 @@ mod tests {
             let root = su::Root::new().unwrap();
 
             let b = Builder::default();
-            let b = b.root(root);
+            let b = b.root(&root);
 
             b.create().unwrap();
         })
@@ -172,7 +172,7 @@ mod tests {
             let root = su::Root::new().unwrap();
 
             let b = Builder::default();
-            let b = b.root(root);
+            let b = b.root(&root);
             let b = b.tag(url);
 
             b.create().unwrap();
@@ -188,7 +188,7 @@ mod tests {
             let root = su::Root::new().unwrap();
 
             let b = Builder::default();
-            let b = b.root(root);
+            let b = b.root(&root);
             let b = b.tag(url);
 
             let _nua_a = b.create().unwrap();
@@ -198,7 +198,7 @@ mod tests {
             let root = su::Root::new().unwrap();
 
             let b = Builder::default();
-            let b = b.root(root);
+            let b = b.root(&root);
             let b = b.tag(url);
 
             assert!(b.create().is_err());

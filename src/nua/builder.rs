@@ -10,13 +10,13 @@ use crate::nua::event::Event;
 use std::ffi::CStr;
 use std::convert::TryFrom;
 
-pub struct Builder {
-    root: Option<su::Root>,
+pub struct Builder<'a> {
+    root: Option<&'a su::Root>,
     tags: Vec<Tag>,
     closure: Option<Box<EventClosure>>,
 }
 
-impl std::fmt::Debug for Builder {
+impl<'a> std::fmt::Debug for Builder<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         f.debug_struct("Builder")
             .field("root", &self.root)
@@ -25,7 +25,7 @@ impl std::fmt::Debug for Builder {
     }
 }
 
-impl Builder {
+impl<'a> Builder<'a> {
     pub fn default() -> Self {
         Builder {
             root: None,
@@ -43,12 +43,12 @@ impl Builder {
         self
     }
 
-    pub fn root(mut self, root: su::Root) -> Self {
+    pub fn root(mut self, root:&'a su::Root) -> Self {
         self.root = Some(root);
         self
     }
 
-    pub fn create(self) -> Result<Box<Nua>> {
+    pub fn create(self) -> Result<Box<Nua<'a>>> {
         let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
 
