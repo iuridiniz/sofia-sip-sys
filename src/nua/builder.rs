@@ -2,7 +2,7 @@
 use crate::result::Result;
 use crate::su;
 use crate::sys;
-use crate::Tag;
+use crate::tag::Tag;
 use crate::nua::Nua;
 use crate::nua::EventClosure;
 use crate::nua::Event;
