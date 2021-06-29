@@ -328,8 +328,8 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_create_nua_with_default_root() {
-        wrap(||{
+    fn create_nua_with_default_root() {
+        wrap(|| {
             let b = NuaBuilder::default();
 
             b.create().unwrap();
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_create_nua_with_custom_root() {
+    fn create_nua_with_custom_root() {
         wrap(|| {
             let root = su::Root::new().unwrap();
 
@@ -351,7 +351,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn test_create_nua_with_custom_url() {
+    fn create_nua_with_custom_url() {
 
         wrap(|| {
             let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
@@ -365,4 +365,5 @@ mod tests {
             b.create().unwrap();
         })
     }
+
 }
