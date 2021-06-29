@@ -45,6 +45,7 @@ impl Tag {
     //     }
     // }
 
+    #[allow(non_snake_case)]
     pub fn NuUrl(url: String) -> Result<Self> {
         Ok(Tag::_NuUrl(CString::new(url)?))
     }

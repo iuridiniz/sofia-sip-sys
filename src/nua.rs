@@ -3,57 +3,30 @@ use super::result::Result;
 use super::su;
 use super::sys;
 use super::Tag;
-use super::Url;
 
 use std::ffi::CStr;
-use std::ffi::CString;
-use std::rc::Rc;
 
 use std::convert::TryFrom;
 
-// type EventCallback = fn(&Nua, event: Event, status: u32, phrase: String);
 type EventClosure = dyn Fn(&mut Nua, Event, u32, String) + 'static;
 
-#[derive(optargs::OptStruct)]
-pub struct NuaTags {
-    pub url: Option<Url>,
-}
-
-impl NuaTags {
-    pub(crate) fn to_tag_list<'a>(&'a self) -> Vec<sys::tagi_t> {
-        let mut tags = vec![];
-        if let Some(url) = &self.url {
-            tags.push(url.t_tagi());
-        }
-        tags
-    }
-}
-
-// #[derive(Clone)]
 pub struct Nua {
-    // pub(crate) callback: Option<EventCallback>, /* may be a vec of callbacks */
     pub(crate) c_ptr: *mut sys::nua_t,
     pub(crate) closure: Option<Box<EventClosure>>,
 }
 
-// impl Clone for Nua {
-//     fn clone(&self) -> Self {
-//         let nua = Nua::_new();
-//         nua
-//     }
-// }
-
 impl std::fmt::Debug for Nua {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        f.debug_struct("Nua").field("c_ptr", &self.c_ptr).finish()
+        f.debug_struct("Nua")
+            .field("Self", &(&*self as *const Nua))
+            .field("c_ptr", &self.c_ptr)
+            .finish()
     }
 }
 
-// #[derive(Debug)]
 pub struct NuaBuilder {
     root: Option<su::Root>,
     tags: Vec<Tag>,
-    // callback: Option<EventCallback>, /* may be a vec of callbacks */
     closure: Option<Box<EventClosure>>,
 }
 
@@ -71,7 +44,6 @@ impl NuaBuilder {
         NuaBuilder {
             root: None,
             tags: Vec::<Tag>::new(),
-            // callback: None,
             closure: None,
         }
     }
@@ -93,9 +65,6 @@ impl NuaBuilder {
     pub fn create(self) -> Result<Box<Nua>> {
         let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
-        // dbg!(nua_ptr);
-        // dbg!(&nua as *const _);
-        dbg!(&*nua as *const _);
 
         let root = match &self.root {
             Some(root) => root.c_ptr,
@@ -112,7 +81,6 @@ impl NuaBuilder {
         sys_tags.push(tag_null.item());
 
         let sys_tags = sys_tags.as_slice();
-        // dbg!(sys_tags);
 
         let c_callback = nua_callback_glue;
         let magic = nua_ptr;
@@ -249,7 +217,6 @@ extern "C" fn nua_callback_glue(
 impl Nua {
     pub(crate) fn _new() -> Nua {
         Nua {
-            // callback: None,
             closure: None,
             c_ptr: std::ptr::null_mut(),
         }
@@ -289,19 +256,13 @@ impl Nua {
             /* failed to create */
             return Err(Error::CreateNuaError);
         }
-
-        // unsafe { sys::nua_shutdown(nua_sys) }
-
         Ok(nua_sys)
     }
 
-    fn on_sys_nua_event(&mut self, event: Event, status: u32, phrase: String, nua: *mut Nua) {
-        // let nua: &Nua = unsafe { &*nua };
-        // dbg!(&*self);
+    fn on_sys_nua_event(&self, event: Event, status: u32, phrase: String, nua: *mut Nua) {
         if let Some(cb) = &self.closure {
             cb(unsafe { &mut *nua }, event, status, phrase);
         }
-        Rc::new(self);
     }
 
     pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'static>(&mut self, cb: F) {
