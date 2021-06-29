@@ -4,8 +4,8 @@ use crate::su;
 use crate::sys;
 use crate::tag::Tag;
 use crate::nua::Nua;
-use crate::nua::EventClosure;
-use crate::nua::Event;
+use crate::nua::event::EventClosure;
+use crate::nua::event::Event;
 
 use std::ffi::CStr;
 use std::convert::TryFrom;

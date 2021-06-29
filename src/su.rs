@@ -1,6 +1,6 @@
-use super::error::{errno, Error, ERROR_NONE};
-use super::result::Result;
-use super::sys;
+use crate::error::{errno, Error, ERROR_NONE};
+use crate::result::Result;
+use crate::sys;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 static INITIALIZED: AtomicBool = AtomicBool::new(false);
