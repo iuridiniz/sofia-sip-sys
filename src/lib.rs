@@ -6,7 +6,7 @@ pub mod sys;
 pub mod tag;
 pub use nua::Event as NuaEvent;
 pub use nua::Nua;
-pub use nua::NuaBuilder;
+pub use nua::Builder as NuaBuilder;
 pub use su::get_default_root;
 pub use tag::Tag;
 

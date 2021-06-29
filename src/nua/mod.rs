@@ -3,7 +3,7 @@ use super::error::Error;
 use super::result::Result;
 use super::su;
 use super::sys;
-pub use super::nua::builder::NuaBuilder;
+pub use super::nua::builder::Builder;
 
 pub type EventClosure = dyn Fn(&mut Nua, Event, u32, String) + 'static;
 
@@ -226,7 +226,7 @@ mod tests {
     #[serial]
     fn create_nua_with_default_root() {
         wrap(|| {
-            let b = NuaBuilder::default();
+            let b = Builder::default();
 
             b.create().unwrap();
         });
@@ -238,7 +238,7 @@ mod tests {
         wrap(|| {
             let root = su::Root::new().unwrap();
 
-            let b = NuaBuilder::default();
+            let b = Builder::default();
             let b = b.root(root);
 
             b.create().unwrap();
@@ -254,7 +254,7 @@ mod tests {
 
             let root = su::Root::new().unwrap();
 
-            let b = NuaBuilder::default();
+            let b = Builder::default();
             let b = b.root(root);
             let b = b.tag(url);
 

@@ -10,24 +10,24 @@ use crate::nua::Event;
 use std::ffi::CStr;
 use std::convert::TryFrom;
 
-pub struct NuaBuilder {
+pub struct Builder {
     root: Option<su::Root>,
     tags: Vec<Tag>,
     closure: Option<Box<EventClosure>>,
 }
 
-impl std::fmt::Debug for NuaBuilder {
+impl std::fmt::Debug for Builder {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        f.debug_struct("NuaBuilder")
+        f.debug_struct("Builder")
             .field("root", &self.root)
             .field("tags", &self.tags)
             .finish()
     }
 }
 
-impl NuaBuilder {
+impl Builder {
     pub fn default() -> Self {
-        NuaBuilder {
+        Builder {
             root: None,
             tags: Vec::<Tag>::new(),
             closure: None,
