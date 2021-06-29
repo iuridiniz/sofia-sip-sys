@@ -7,10 +7,12 @@ use super::Url;
 
 use std::ffi::CStr;
 use std::ffi::CString;
+use std::rc::Rc;
 
 use std::convert::TryFrom;
 
-type MessagesCallback = fn();
+// type EventCallback = fn(&Nua, event: Event, status: u32, phrase: String);
+type EventClosure = dyn Fn(&mut Nua, Event, u32, String) + 'static;
 
 #[derive(optargs::OptStruct)]
 pub struct NuaTags {
@@ -27,87 +29,95 @@ impl NuaTags {
     }
 }
 
-#[derive(Debug, Clone)]
+// #[derive(Clone)]
 pub struct Nua {
-    messages_callback: Option<MessagesCallback>,
-    // root: Option<&'a su::Root>,
+    // pub(crate) callback: Option<EventCallback>, /* may be a vec of callbacks */
     pub(crate) c_ptr: *mut sys::nua_t,
-    // create_tags: crate::Tags,
+    pub(crate) closure: Option<Box<EventClosure>>,
 }
 
-#[derive(Debug)]
+// impl Clone for Nua {
+//     fn clone(&self) -> Self {
+//         let nua = Nua::_new();
+//         nua
+//     }
+// }
+
+impl std::fmt::Debug for Nua {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        f.debug_struct("Nua").field("c_ptr", &self.c_ptr).finish()
+    }
+}
+
+// #[derive(Debug)]
 pub struct NuaBuilder {
-    nua: Nua,
     root: Option<su::Root>,
     tags: Vec<Tag>,
-    callback: Option<MessagesCallback>, /* may be a vec of callbacks */
+    // callback: Option<EventCallback>, /* may be a vec of callbacks */
+    closure: Option<Box<EventClosure>>,
+}
+
+impl std::fmt::Debug for NuaBuilder {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
+        f.debug_struct("NuaBuilder")
+            .field("root", &self.root)
+            .field("tags", &self.tags)
+            .finish()
+    }
 }
 
 impl NuaBuilder {
     pub fn default() -> Self {
         NuaBuilder {
-            nua: Nua::_new(),
             root: None,
             tags: Vec::<Tag>::new(),
-            callback: None,
+            // callback: None,
+            closure: None,
         }
     }
     pub fn tag(mut self, tag: Tag) -> Self {
         self.tags.push(tag);
         self
     }
-    pub fn callback(mut self, cb: MessagesCallback) -> Self {
-        self.callback = Some(cb);
+
+    pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'static>(mut self, cb: F) -> Self {
+        self.closure = Some(Box::new(cb));
         self
     }
+
     pub fn root(mut self, root: su::Root) -> Self {
         self.root = Some(root);
         self
     }
 
-    pub fn create(&self) -> Result<Box<Nua>> {
-        let mut nua = Box::new(self.nua.clone());
+    pub fn create(self) -> Result<Box<Nua>> {
+        let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
         // dbg!(nua_ptr);
         // dbg!(&nua as *const _);
-        // dbg!(&*nua as *const _);
+        dbg!(&*nua as *const _);
 
         let root = match &self.root {
             Some(root) => root.c_ptr,
             _ => crate::su::get_default_root()?.c_ptr,
         };
 
-        // /* convert tags that are string to c_string */
-        // let mut tags = Vec::<&Tag>::new();
-
-        // for tag in self.tags {
-        //     let tag = tag.convert()?;
-        //     tags.push(&tag);
-        // }
         let mut sys_tags = Vec::<sys::tagi_t>::new();
         for tag in &self.tags {
             sys_tags.push(tag.item());
         }
 
-        /* MEMORY FOR C STRING */
-        // let mut sys_tags = Vec::<sys::tagi_t>::new();
-        // let v = CString::new("sip:*:5090")?;
-
-        // sys_tags.push(sys::tagi_t {
-        //     t_tag: Tag::NuUrl("".to_string()).symbol(),
-        //     t_value: v.as_ptr() as isize,
-        // });
-
+        /* last tag must be TAG_END or TAG_NULL */
         let tag_null = Tag::Null;
-
         sys_tags.push(tag_null.item());
 
         let sys_tags = sys_tags.as_slice();
-        dbg!(sys_tags);
+        // dbg!(sys_tags);
 
-        let callback = nua_app_callback_glue;
+        let c_callback = nua_callback_glue;
         let magic = nua_ptr;
-        nua.c_ptr = Nua::_create(root, Some(callback), magic, Some(sys_tags))?;
+        nua.closure = self.closure;
+        nua.c_ptr = Nua::_create(root, Some(c_callback), magic, Some(sys_tags))?;
         Ok(nua)
     }
 }
@@ -197,7 +207,7 @@ back_to_enum! {
     }
 }
 
-extern "C" fn nua_app_callback_glue(
+extern "C" fn nua_callback_glue(
     _event: sys::nua_event_t,
     _status: ::std::os::raw::c_int,
     _phrase: *const ::std::os::raw::c_char,
@@ -219,15 +229,15 @@ extern "C" fn nua_app_callback_glue(
         /* This call is expect to not panic if sofia does not changes their api */
         /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
-        dbg!(event);
+        // dbg!(&event);
         let status = _status as u32;
         let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
         // let sys_nua: _nua;
         let nua: *mut Nua = _magic as *mut Nua;
 
-        // unsafe {
-        //     (*nua).app_callback(event, status, &phrase);
-        // }
+        unsafe {
+            (*nua).on_sys_nua_event(event, status, phrase, nua);
+        }
     }) {
         // Code here must be panic-free.
         eprintln!("PANIC!! while calling a callback from C: {:?}", e);
@@ -239,10 +249,9 @@ extern "C" fn nua_app_callback_glue(
 impl Nua {
     pub(crate) fn _new() -> Nua {
         Nua {
-            messages_callback: None,
-            // root: None,
+            // callback: None,
+            closure: None,
             c_ptr: std::ptr::null_mut(),
-            // create_tags: tags,
         }
     }
     pub(crate) fn _create(
@@ -285,61 +294,23 @@ impl Nua {
 
         Ok(nua_sys)
     }
-    // pub fn new(tags: crate::Tags) -> Result<Nua<'a>> {
-    //     Nua::new_with_root(su::get_default_root()?, tags)
-    // }
 
-    // pub fn new_with_root(root: &'a su::Root, tags: crate::Tags) -> Result<Nua<'a>> {
-    //     let nua = Nua {
-    //         messages_callback: None,
-    //         root: Some(root),
-    //         c_ptr: std::ptr::null_mut(),
-    //         // create_tags: tags,
-    //     };
+    fn on_sys_nua_event(&mut self, event: Event, status: u32, phrase: String, nua: *mut Nua) {
+        // let nua: &Nua = unsafe { &*nua };
+        // dbg!(&*self);
+        if let Some(cb) = &self.closure {
+            cb(unsafe { &mut *nua }, event, status, phrase);
+        }
+        Rc::new(self);
+    }
 
-    //     Ok(nua)
-    // }
+    pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'static>(&mut self, cb: F) {
+        self.closure = Some(Box::new(cb));
+    }
 
-    // pub fn messages_connect(&mut self, cb: MessagesCallback) {
-    //     self._create();
-    //     self.messages_callback = Some(cb);
-    //     // unsafe { sys::nua_shutdown(self.c_ptr) };
-    // }
-
-    // fn app_callback(&mut self, event: Event, status: u32, phrase: &str) {
-    //     println!(
-    //         "Callback event: {:?} // status: {:?} // phrase: {:?}",
-    //         event, status, phrase
-    //     );
-    //     if let Some(cb) = self.messages_callback {
-    //         cb()
-    //     } else {
-    //         println!("callback is None")
-    //     }
-    // }
-
-    // fn _create(&mut self) {
-    //     if !self.c_ptr.is_null() {
-    //         return;
-    //     }
-    //     let nua_ptr = self as *mut Nua as *mut sys::nua_magic_t;
-
-    //     // let tags = self.create_tags.to_tag_list();
-    //     // let tags = tags.as_slice();
-
-    //     // let nua_sys = unsafe {
-    //     //     sys::nua_create(
-    //     //         self.root.c_ptr,
-    //     //         Some(nua_app_callback_glue),
-    //     //         nua_ptr,
-    //     //         sys::tag_next.as_ptr() as *const sys::tag_type_s,
-    //     //         tags.as_ptr() as isize,
-    //     //     )
-    //     // };
-    //     // dbg!(nua_sys);
-
-    //     // self.c_ptr = nua_sys;
-    // }
+    pub fn shutdown(&self) {
+        unsafe { sys::nua_shutdown(self.c_ptr) }
+    }
 
     fn _destroy(&mut self) {
         if self.c_ptr.is_null() {
