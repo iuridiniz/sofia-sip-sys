@@ -28,7 +28,6 @@ impl std::fmt::Debug for Nua {
     }
 }
 
-
 impl Nua {
     pub(crate) fn _new() -> Nua {
         Nua {
@@ -163,10 +162,10 @@ mod tests {
         })
     }
 
+
     #[test]
     #[serial]
     fn create_nua_with_custom_url() {
-
         wrap(|| {
             let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
 
@@ -177,6 +176,32 @@ mod tests {
             let b = b.tag(url);
 
             b.create().unwrap();
+        })
+    }
+
+    #[test]
+    #[serial]
+    fn create_two_nua_with_same_port() {
+        wrap(|| {
+            let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+
+            let root = su::Root::new().unwrap();
+
+            let b = Builder::default();
+            let b = b.root(root);
+            let b = b.tag(url);
+
+            let _nua_a = b.create().unwrap();
+
+            let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+
+            let root = su::Root::new().unwrap();
+
+            let b = Builder::default();
+            let b = b.root(root);
+            let b = b.tag(url);
+
+            assert!(b.create().is_err());
         })
     }
 
