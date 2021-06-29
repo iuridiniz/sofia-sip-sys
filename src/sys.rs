@@ -30,7 +30,9 @@ mod tests {
     }
 
     use crate::sys;
+    use serial_test::serial;
     #[test]
+    #[serial]
     fn test_nua_init_and_deinit() {
         unsafe {
             let null: *const std::os::raw::c_void = std::ptr::null();
@@ -111,6 +113,7 @@ mod tests {
         }
     }
     #[test]
+    #[serial]
     fn test_nua_init_and_deinit_without_threads() {
         unsafe {
             let null: *const std::os::raw::c_void = std::ptr::null();
@@ -194,6 +197,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_su_root_null() {
         let null: *const std::os::raw::c_void = std::ptr::null();
         /* test call with NULL */
@@ -207,6 +211,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_extension_incomplete() {
         /* Test for EXTENSION
         A                    B

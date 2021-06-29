@@ -21,3 +21,6 @@ pkg-config = "0.3.19"
 [dependencies]
 errno = "0.2.7"
 optargs = "0.1.2"
+
+[dev-dependencies]
+serial_test = "0.5.1"
