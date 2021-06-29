@@ -22,6 +22,7 @@ impl std::fmt::Debug for Nua {
         f.debug_struct("Nua")
             .field("Self", &(&*self as *const Nua))
             .field("c_ptr", &self.c_ptr)
+            .field("root", &self.root)
             .finish()
     }
 }
