@@ -26,7 +26,8 @@ impl Root {
             return Err(Error::InitError);
         }
 
-        /* disable threads */
+        /* TODO: use a cargo feature */
+        /* Disable threads */
         unsafe { sys::su_root_threading(root, 0) };
 
         Ok(Root {
@@ -40,7 +41,7 @@ impl Root {
             if self.c_ptr.is_null() {
                 return;
             }
-            self.run_until_end();
+            self.run_until_empty();
             sys::su_root_destroy(self.c_ptr);
             self.c_ptr = std::ptr::null_mut();
         };
@@ -55,7 +56,7 @@ impl Root {
         unsafe { sys::su_root_step(self.c_ptr, timeout) }
     }
 
-    pub fn run_until_end(&self) {
+    pub fn run_until_empty(&self) {
         while self.step(Some(1)) >= 0 {}
     }
 
