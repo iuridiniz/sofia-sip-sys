@@ -34,6 +34,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_nua_init_and_deinit() {
+        errno();
         unsafe {
             let null: *const std::os::raw::c_void = std::ptr::null();
 
@@ -115,6 +116,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_nua_init_and_deinit_without_threads() {
+        errno();
         unsafe {
             let null: *const std::os::raw::c_void = std::ptr::null();
 
@@ -199,6 +201,7 @@ mod tests {
     #[test]
     #[serial]
     fn test_su_root_null() {
+        errno();
         let null: *const std::os::raw::c_void = std::ptr::null();
         /* test call with NULL */
         assert_eq!(errno(), ERROR_NONE);
@@ -222,7 +225,7 @@ mod tests {
         |<-------200---------| (method allowed, responded)
         |                    |
         */
-
+        errno();
         unsafe {
             let null: *mut std::os::raw::c_void = std::ptr::null_mut();
 
