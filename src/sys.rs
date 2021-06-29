@@ -33,7 +33,7 @@ mod tests {
     use serial_test::serial;
     #[test]
     #[serial]
-    fn test_nua_init_and_deinit() {
+    fn test_nua_init_and_deinit_with_threads() {
         errno();
         unsafe {
             let null: *const std::os::raw::c_void = std::ptr::null();
@@ -286,7 +286,7 @@ mod tests {
             sys::nua_shutdown(nua);
 
             /* enter main loop for processing of messages () */
-            let mut remaining = 0;
+            let mut remaining;
             loop {
                 remaining = sys::su_root_step(root, 100);
                 // assert_eq!(remaining, 1000 - 100);

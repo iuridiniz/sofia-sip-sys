@@ -24,3 +24,6 @@ optargs = "0.1.2"
 
 [dev-dependencies]
 serial_test = "0.5.1"
+
+[profile.test]
+# panic = 'abort'

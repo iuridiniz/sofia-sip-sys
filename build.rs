@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use metadeps;
 fn main() {
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-changed=wrapper.h");
 
     let libs = metadeps::probe().unwrap();
     // eprintln!("{:?}", &libs);
@@ -46,6 +47,8 @@ fn main() {
         .opaque_type("su_home_t")
         .opaque_type("su_root_t")
         .opaque_type("sip_t")
+        // .allowlist_type("nua_t")
+        // .allowlist_type("nua_s")
         /* tags */
         .allowlist_type("tagi_t")
         .allowlist_type("tag_type_t")

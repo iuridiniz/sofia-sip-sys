@@ -11,8 +11,10 @@ use std::convert::TryFrom;
 type EventClosure = dyn Fn(&mut Nua, Event, u32, String) + 'static;
 
 pub struct Nua {
+    pub(crate) root: Option<su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
     pub(crate) closure: Option<Box<EventClosure>>,
+    shutdown_completed: bool,
 }
 
 impl std::fmt::Debug for Nua {
@@ -66,7 +68,7 @@ impl NuaBuilder {
         let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
 
-        let root = match &self.root {
+        let c_root = match &self.root {
             Some(root) => root.c_ptr,
             _ => crate::su::get_default_root()?.c_ptr,
         };
@@ -85,7 +87,8 @@ impl NuaBuilder {
         let c_callback = nua_callback_glue;
         let magic = nua_ptr;
         nua.closure = self.closure;
-        nua.c_ptr = Nua::_create(root, Some(c_callback), magic, Some(sys_tags))?;
+        nua.c_ptr = Nua::_create(c_root, Some(c_callback), magic, Some(sys_tags))?;
+        nua.root = self.root;
         Ok(nua)
     }
 }
@@ -197,7 +200,7 @@ extern "C" fn nua_callback_glue(
         /* This call is expect to not panic if sofia does not changes their api */
         /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
-        // dbg!(&event);
+        dbg!(&event);
         let status = _status as u32;
         let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
         // let sys_nua: _nua;
@@ -217,10 +220,19 @@ extern "C" fn nua_callback_glue(
 impl Nua {
     pub(crate) fn _new() -> Nua {
         Nua {
+            root: None,
             closure: None,
             c_ptr: std::ptr::null_mut(),
+            shutdown_completed: false,
         }
     }
+    pub fn root(&self) -> &su::Root {
+        match &self.root {
+            Some(root) => root,
+            None => crate::su::get_default_root().unwrap(),
+        }
+    }
+
     pub(crate) fn _create(
         root: *mut sys::su_root_t,
         callback: sys::nua_callback_f,
@@ -260,8 +272,12 @@ impl Nua {
     }
 
     fn on_sys_nua_event(&self, event: Event, status: u32, phrase: String, nua: *mut Nua) {
+        let nua = unsafe { &mut *nua };
+        if let Event::ReplyShutdown = event {
+            nua.shutdown_completed = true;
+        }
         if let Some(cb) = &self.closure {
-            cb(unsafe { &mut *nua }, event, status, phrase);
+            cb(nua, event, status, phrase);
         }
     }
 
@@ -270,13 +286,27 @@ impl Nua {
     }
 
     pub fn shutdown(&self) {
-        unsafe { sys::nua_shutdown(self.c_ptr) }
+        if self.shutdown_completed == false {
+            unsafe { sys::nua_shutdown(self.c_ptr) };
+        }
+    }
+    pub fn shutdown_and_wait(&self) {
+        self.shutdown();
+        while self.shutdown_completed == false {
+            if self.root().step(Some(1)) < 0 {
+                break;
+            }
+        }
     }
 
     fn _destroy(&mut self) {
         if self.c_ptr.is_null() {
             return;
         }
+
+        /* before destroy we need to shutdown and wait for that shutdown */
+        self.shutdown_and_wait();
+
         unsafe {
             sys::nua_destroy(self.c_ptr);
             self.c_ptr = std::ptr::null_mut();
@@ -287,5 +317,52 @@ impl Nua {
 impl Drop for Nua {
     fn drop(&mut self) {
         self._destroy()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use serial_test::serial;
+    use super::*;
+    use super::su::tests::wrap;
+
+    #[test]
+    #[serial]
+    fn test_create_nua_with_default_root() {
+        wrap(||{
+            let b = NuaBuilder::default();
+
+            let mut _nua = b.create().unwrap();
+        });
+    }
+
+    #[test]
+    #[serial]
+    fn test_create_nua_with_custom_root() {
+        wrap(|| {
+            let root = su::Root::new().unwrap();
+
+            let b = NuaBuilder::default();
+            let b = b.root(root);
+
+            let _nua = b.create().unwrap();
+        })
+    }
+
+    #[test]
+    #[serial]
+    fn test_create_nua_with_custom_url() {
+
+        wrap(|| {
+            let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+
+            let root = su::Root::new().unwrap();
+
+            let b = NuaBuilder::default();
+            let b = b.root(root);
+            let b = b.tag(url);
+
+            let _nua = b.create().unwrap();
+        })
     }
 }
