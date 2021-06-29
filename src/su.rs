@@ -27,7 +27,7 @@ impl Root {
         }
 
         /* disable threads */
-        // unsafe { sys::su_root_threading(root, 0) };
+        unsafe { sys::su_root_threading(root, 0) };
 
         Ok(Root {
             c_ptr: root,
