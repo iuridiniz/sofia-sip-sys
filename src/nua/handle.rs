@@ -2,6 +2,8 @@ use crate::error::Error;
 use crate::result::Result;
 use crate::nua::Nua;
 use crate::sys;
+use crate::nua::builder::convert_tags;
+use crate::tag::Tag;
 
 #[derive(Debug)]
 pub struct Handle<'a> {
@@ -61,6 +63,8 @@ impl<'a> Handle<'a> {
 
         assert!(!nh.is_null());
 
+        // dbg!(tags);
+
         if tags.is_none() {
             /* TAG_NULL */
             tag_name = std::ptr::null();
@@ -73,7 +77,8 @@ impl<'a> Handle<'a> {
         unsafe { sys::nua_message(nh, tag_name, tag_value) };
     }
 
-    pub fn message(&self, tags: Vec::<sys::tagi_t>) {
+    pub fn message(&self, tags: Vec::<Tag>) {
+        let tags = convert_tags(&tags);
         let sys_tags = tags.as_slice();
 
         let nh = self.c_ptr;

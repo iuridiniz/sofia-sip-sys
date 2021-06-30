@@ -27,7 +27,7 @@ impl<'a> std::fmt::Debug for Builder<'a> {
     }
 }
 
-fn convert_tags(tags: &Vec<Tag>) -> Vec::<sys::tagi_t> {
+pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec::<sys::tagi_t> {
     let mut sys_tags = Vec::<sys::tagi_t>::new();
     for tag in tags {
         sys_tags.push(tag.item());
@@ -63,8 +63,8 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn create_tags(self) -> Vec::<sys::tagi_t> {
-        convert_tags(&self.tags)
+    pub fn create_tags(self) -> Vec<Tag> {
+        self.tags
     }
 
     pub fn create_nua(self) -> Result<Box<Nua<'a>>> {
@@ -134,7 +134,7 @@ extern "C" fn nua_callback_glue(
 
         unsafe {
             let nua_struct = &*nua;
-            dbg!(&event, nua_struct);
+            // dbg!(&event, nua_struct);
             nua_struct.on_sys_nua_event(event, status, phrase, nua);
         }
     }) {

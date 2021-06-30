@@ -11,6 +11,7 @@ pub enum Tag {
     _SipSubjectStr(CString),
     _SipContentTypeStr(CString),
     _SipPayloadStr(CString),
+    _SipToStr(CString),
     Null,
     End,
 }
@@ -21,6 +22,7 @@ impl Tag {
             Tag::_SipSubjectStr(_) => unsafe { sys::siptag_subject_str.as_ptr() },
             Tag::_SipContentTypeStr(_) => unsafe { sys::siptag_content_type_str.as_ptr() },
             Tag::_SipPayloadStr(_) => unsafe { sys::siptag_payload_str.as_ptr() },
+            Tag::_SipToStr(_) => unsafe { sys::siptag_to_str.as_ptr() },
             Tag::Null | Tag::End => std::ptr::null() as sys::tag_type_t,
         }
     }
@@ -29,7 +31,8 @@ impl Tag {
             Tag::_NuUrl(cstring) |
             Tag::_SipSubjectStr(cstring) |
             Tag::_SipContentTypeStr(cstring) |
-            Tag::_SipPayloadStr(cstring)
+            Tag::_SipPayloadStr(cstring) |
+            Tag::_SipToStr(cstring)
                 => cstring.as_ptr() as sys::tag_value_t,
             Tag::Null | Tag::End => 0 as sys::tag_value_t,
         }
@@ -60,5 +63,10 @@ impl Tag {
     #[allow(non_snake_case)]
     pub fn SipPayload(s: String) -> Result<Self> {
         Ok(Tag::_SipPayloadStr(CString::new(s)?))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn SipTo(s: String) -> Result<Self> {
+        Ok(Tag::_SipToStr(CString::new(s)?))
     }
 }

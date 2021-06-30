@@ -49,11 +49,16 @@ impl Root {
 
     pub fn step(&self, timeout: Option<i64>) -> i64 {
         let timeout = match timeout {
-            Some(x) if x > 0 && x < 1000 => x,
+            Some(x) if x >= 0 && x < 1000 => x,
             _ => 100,
         };
         assert!(!self.c_ptr.is_null());
         unsafe { sys::su_root_step(self.c_ptr, timeout) }
+    }
+
+    pub fn sleep(&self, timeout: i64) -> i64 {
+        assert!(!self.c_ptr.is_null());
+        unsafe { sys::su_root_sleep(self.c_ptr, timeout) }
     }
 
     pub fn run_until_next_timer(&self) {

@@ -36,6 +36,7 @@ fn main() {
         /* su root class */
         .allowlist_function("su_root_create")
         .allowlist_function("su_root_step")
+        .allowlist_function("su_root_sleep")
         .allowlist_function("su_root_threading")
         .allowlist_function("su_root_destroy")
         .allowlist_function("nua_create")
@@ -62,6 +63,7 @@ fn main() {
         .allowlist_var("siptag_subject_str")
         .allowlist_var("siptag_content_type_str")
         .allowlist_var("siptag_payload_str")
+        .allowlist_var("siptag_to_str")
         /* nua tags */
         .allowlist_var("nutag_url")
         .allowlist_function("urltag_url_v")
