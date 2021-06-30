@@ -42,11 +42,12 @@ fn main() {
         .allowlist_function("nua_handle")
         .allowlist_function("nua_shutdown")
         .allowlist_function("nua_destroy")
-        /* nua class */
+        /* nua/nua_handle class */
         .allowlist_function("nua_set_params")
         .opaque_type("su_home_t")
         .opaque_type("su_root_t")
         .opaque_type("sip_t")
+        .allowlist_function("nua_message")
         // .allowlist_type("nua_t")
         // .allowlist_type("nua_s")
         /* tags */
@@ -58,6 +59,9 @@ fn main() {
         .allowlist_var("tag_next")
         .allowlist_var("tag_any")
         .allowlist_var("tag_filter")
+        .allowlist_var("siptag_subject_str")
+        .allowlist_var("siptag_content_type_str")
+        .allowlist_var("siptag_payload_str")
         /* nua tags */
         .allowlist_var("nutag_url")
         .allowlist_function("urltag_url_v")

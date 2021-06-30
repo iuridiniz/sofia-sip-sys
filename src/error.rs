@@ -2,6 +2,7 @@
 pub enum Error {
     InitError,
     CreateNuaError,
+    CreateNuaHandleError,
     UrlError,
     ConvertToCStringError,
     MissingTagConversion,

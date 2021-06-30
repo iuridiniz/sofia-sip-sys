@@ -37,14 +37,14 @@ impl Root {
     }
 
     pub(crate) fn _destroy(&mut self) {
+        if self.c_ptr.is_null() {
+            return;
+        }
+        self.run_until_next_timer();
         unsafe {
-            if self.c_ptr.is_null() {
-                return;
-            }
-            self.run_until_empty();
             sys::su_root_destroy(self.c_ptr);
-            self.c_ptr = std::ptr::null_mut();
-        };
+        }
+        self.c_ptr = std::ptr::null_mut();
     }
 
     pub fn step(&self, timeout: Option<i64>) -> i64 {
@@ -56,8 +56,14 @@ impl Root {
         unsafe { sys::su_root_step(self.c_ptr, timeout) }
     }
 
-    pub fn run_until_empty(&self) {
-        while self.step(Some(1)) >= 0 {}
+    pub fn run_until_next_timer(&self) {
+        loop {
+            let remaining = self.step(Some(1));
+            // dbg!(remaining);
+            if remaining <= 0 {
+                break;
+            }
+        }
     }
 
     pub fn quit(&mut self) {

@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-//clang ``pkg-config --cflags sofia-sip-ua` wrapper.h
+//clang `pkg-config --cflags sofia-sip-ua` wrapper.h
 //cpp `pkg-config --cflags sofia-sip-ua` wrapper.h
 // int tttttttttttttttt;
 // TAG_NEXT(a);
@@ -19,3 +19,16 @@
 // tag_next, (tag_value_t)(A);
 // NUTAG_URL("*:5060");
 // nutag_url, urltag_url_v("*:5060");
+
+// NUTAG_URL(url),
+//     SIPTAG_SUBJECT_STR("NUA-11.1.1"),
+//     SIPTAG_CONTENT_TYPE_STR("text/plain"),
+//     SIPTAG_PAYLOAD_STR("Hello hellO!\n"),
+//     TAG_END()
+
+// nutag_url, urltag_url_v(url),
+//     siptag_subject_str, tag_str_v("NUA-11.1.1"),
+//     siptag_content_type_str, tag_str_v("text/plain"),
+//     siptag_payload_str, tag_str_v("Hello hellO!\n"),
+//     (tag_type_t)0, (tag_value_t)0
+// SU_WAIT_FOREVER;

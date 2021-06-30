@@ -8,6 +8,9 @@ use std::ffi::CString;
 pub enum Tag {
     // NuUrl(String),
     _NuUrl(CString),
+    _SipSubjectStr(CString),
+    _SipContentTypeStr(CString),
+    _SipPayloadStr(CString),
     Null,
     End,
 }
@@ -15,12 +18,19 @@ impl Tag {
     pub(crate) fn symbol(&self) -> sys::tag_type_t {
         match self {
             Tag::_NuUrl(_) => unsafe { sys::nutag_url.as_ptr() },
+            Tag::_SipSubjectStr(_) => unsafe { sys::siptag_subject_str.as_ptr() },
+            Tag::_SipContentTypeStr(_) => unsafe { sys::siptag_content_type_str.as_ptr() },
+            Tag::_SipPayloadStr(_) => unsafe { sys::siptag_payload_str.as_ptr() },
             Tag::Null | Tag::End => std::ptr::null() as sys::tag_type_t,
         }
     }
     pub(crate) fn value(&self) -> sys::tag_value_t {
         match self {
-            Tag::_NuUrl(url) => url.as_ptr() as sys::tag_value_t,
+            Tag::_NuUrl(cstring) |
+            Tag::_SipSubjectStr(cstring) |
+            Tag::_SipContentTypeStr(cstring) |
+            Tag::_SipPayloadStr(cstring)
+                => cstring.as_ptr() as sys::tag_value_t,
             Tag::Null | Tag::End => 0 as sys::tag_value_t,
         }
     }
@@ -31,22 +41,24 @@ impl Tag {
             t_tag: self.symbol(),
         }
     }
-    // pub(crate) fn is_string(&self) -> bool {
-    //     match self {
-    //         Tag::NuUrl(_) => true,
-    //         _ => false,
-    //     }
-    // }
-
-    // pub fn convert(self) -> Result<Self> {
-    //     match self {
-    //         Tag::NuUrl(url) => Ok(Tag::_NuUrl(CString::new(url)?)),
-    //         _ => Ok(self),
-    //     }
-    // }
 
     #[allow(non_snake_case)]
     pub fn NuUrl(url: String) -> Result<Self> {
         Ok(Tag::_NuUrl(CString::new(url)?))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn SipSubject(s: String) -> Result<Self> {
+        Ok(Tag::_SipSubjectStr(CString::new(s)?))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn SipContentType(s: String) -> Result<Self> {
+        Ok(Tag::_SipContentTypeStr(CString::new(s)?))
+    }
+
+    #[allow(non_snake_case)]
+    pub fn SipPayload(s: String) -> Result<Self> {
+        Ok(Tag::_SipPayloadStr(CString::new(s)?))
     }
 }

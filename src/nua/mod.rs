@@ -1,5 +1,6 @@
 pub mod builder;
 pub mod event;
+pub mod handle;
 
 use crate::error::Error;
 use crate::result::Result;
@@ -202,6 +203,61 @@ mod tests {
             let b = b.tag(url);
 
             assert!(b.create().is_err());
+        })
+    }
+
+    #[test]
+    #[serial]
+    fn test_nua_a_send_message_to_nua_b() {
+        /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
+
+        /* 
+        A                    B
+        |-------MESSAGE----->|
+        |<--------200--------| (method allowed, responded)
+        |                    |
+        */
+
+        wrap(|| {
+
+            let root = su::Root::new().unwrap();
+
+            let nua_a = {
+                let url = Tag::NuUrl("sip:127.0.0.1:5080".to_string()).unwrap();
+                Builder::default()
+                    .root(&root)
+                    .tag(url)
+                    .create().unwrap()
+            };
+
+            let nua_b = {
+                let url = Tag::NuUrl("sip:127.0.0.1:5081".to_string()).unwrap();
+                Builder::default()
+                    .root(&root)
+                    .tag(url)
+                    .create().unwrap()
+            };
+
+            let handle = Builder::default()
+                .create_handle(&nua_a).unwrap();
+
+            // dbg!(&handle);
+
+            let tags = Builder::default()
+                // .tag(Tag::NuUrl("<99@sip:127.0.0.1:5081>".to_string()).unwrap())
+                .tag(Tag::SipSubject("NUA".to_string()).unwrap())
+                .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
+                .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
+                .create_tags();
+            // dbg!(&tags);
+
+            handle.message(tags);
+
+
+            root.run_until_next_timer();
+
+            panic!("abort");
+
         })
     }
 

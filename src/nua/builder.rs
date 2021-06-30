@@ -6,12 +6,14 @@ use crate::tag::Tag;
 use crate::nua::Nua;
 use crate::nua::event::EventClosure;
 use crate::nua::event::Event;
+use crate::nua::handle::Handle;
 
 use std::ffi::CStr;
 use std::convert::TryFrom;
 
 pub struct Builder<'a> {
     root: Option<&'a su::Root>,
+    // nua: Option<&'a Nua<'a>>,
     tags: Vec<Tag>,
     closure: Option<Box<EventClosure>>,
 }
@@ -25,10 +27,23 @@ impl<'a> std::fmt::Debug for Builder<'a> {
     }
 }
 
+fn convert_tags(tags: &Vec<Tag>) -> Vec::<sys::tagi_t> {
+    let mut sys_tags = Vec::<sys::tagi_t>::new();
+    for tag in tags {
+        sys_tags.push(tag.item());
+    }
+
+    /* last tag must be TAG_END or TAG_NULL */
+    let tag_null = Tag::Null;
+    sys_tags.push(tag_null.item());
+    sys_tags
+}
+
 impl<'a> Builder<'a> {
     pub fn default() -> Self {
         Builder {
             root: None,
+            // nua: None,
             tags: Vec::<Tag>::new(),
             closure: None,
         }
@@ -48,7 +63,11 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn create(self) -> Result<Box<Nua<'a>>> {
+    pub fn create_tags(self) -> Vec::<sys::tagi_t> {
+        convert_tags(&self.tags)
+    }
+
+    pub fn create_nua(self) -> Result<Box<Nua<'a>>> {
         let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
 
@@ -57,16 +76,8 @@ impl<'a> Builder<'a> {
             _ => crate::su::get_default_root()?.c_ptr,
         };
 
-        let mut sys_tags = Vec::<sys::tagi_t>::new();
-        for tag in &self.tags {
-            sys_tags.push(tag.item());
-        }
-
-        /* last tag must be TAG_END or TAG_NULL */
-        let tag_null = Tag::Null;
-        sys_tags.push(tag_null.item());
-
-        let sys_tags = sys_tags.as_slice();
+        let tags = convert_tags(&self.tags);
+        let sys_tags = tags.as_slice();
 
         let c_callback = nua_callback_glue;
         let magic = nua_ptr;
@@ -75,8 +86,24 @@ impl<'a> Builder<'a> {
         nua.root = self.root;
         Ok(nua)
     }
-}
 
+    pub fn create(self) -> Result<Box<Nua<'a>>> {
+        self.create_nua()
+    }
+
+    pub fn create_handle(self, nua:&'a Box<Nua<'_>>) -> Result<Box<Handle<'a>>> {
+        let mut handle = Box::new(Handle::_new());
+        let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
+
+        let tags = convert_tags(&self.tags);
+        let sys_tags = tags.as_slice();
+        let magic = handle_ptr;
+
+        handle.c_ptr = Handle::_create(nua.c_ptr, magic, Some(sys_tags))?;
+        handle.nua = Some(nua);
+        Ok(handle)
+    }
+}
 
 extern "C" fn nua_callback_glue(
     _event: sys::nua_event_t,
@@ -89,7 +116,7 @@ extern "C" fn nua_callback_glue(
     _sip: *const sys::sip_t,
     _tags: *mut sys::tagi_t,
 ) {
-    dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
+    // dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
 
     /*
     Panics can happen pretty much anywhere in Rust code.
@@ -100,14 +127,15 @@ extern "C" fn nua_callback_glue(
         /* This call is expect to not panic if sofia does not changes their api */
         /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
-        dbg!(&event);
         let status = _status as u32;
         let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
         // let sys_nua: _nua;
         let nua: *mut Nua = _magic as *mut Nua;
 
         unsafe {
-            (*nua).on_sys_nua_event(event, status, phrase, nua);
+            let nua_struct = &*nua;
+            dbg!(&event, nua_struct);
+            nua_struct.on_sys_nua_event(event, status, phrase, nua);
         }
     }) {
         // Code here must be panic-free.
