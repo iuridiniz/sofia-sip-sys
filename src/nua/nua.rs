@@ -81,10 +81,9 @@ impl<'a> Nua<'a> {
 
     pub(crate) fn on_sys_nua_event(&self, event: Event, status: u32, phrase: String, nua: *mut Nua) {
         let nua = unsafe { &mut *nua };
-        if let Event::ReplyShutdown = event {
-            if status >= 200 {
-                nua.shutdown_completed = true;
-            }
+        match (&event, status) {
+            (Event::ReplyShutdown, x) if x >= 200 => { nua.shutdown_completed = true }
+            (_,_) => {}
         }
         if let Some(cb) = &self.closure {
             cb(nua, event, status, phrase);
