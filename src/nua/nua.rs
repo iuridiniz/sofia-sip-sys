@@ -278,7 +278,7 @@ mod tests {
         |<--------200-------/
         |
         */
-
+        let my_message = "Hi\n";
         let root = su::Root::new().unwrap();
         let url = std::rc::Rc::new("sip:127.0.0.1:9997");
 
@@ -289,17 +289,25 @@ mod tests {
                 .tag(url)
                 .create().unwrap()
         };
-
-        nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
-            dbg!(&nua, &event, &status, &phrase);
-            // let root: &su::Root = nua.root();
-            match event {
-                Event::ReplyShutdown => {
-                    // root.quit();
-                },
-                _ => {},
-            }
-        });
+        {
+            // let my_message = my_message.clone();
+            nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
+                dbg!(&nua, &event, &status, &phrase);
+                let root: &su::Root = nua.root();
+                match event {
+                    Event::ReplyShutdown => {
+                        root.break_();
+                    },
+                    Event::IncomingMessage => {
+                        // dbg!(my_message);
+                    }
+                    Event::ReplyMessage => {
+                        // dbg!(my_message);
+                    }
+                    _ => {},
+                }
+            });
+        }
 
 
         let handle = Builder::default()
@@ -314,12 +322,11 @@ mod tests {
             .tag(Tag::SipTo(url.clone().to_string()).unwrap())
             .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
             .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
-            .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
+            .tag(Tag::SipPayload(my_message.to_owned()).unwrap())
             .create_tags();
 
         handle.message(tags);
         root.sleep(1000);
-
         panic!("abort");
     })}
 
