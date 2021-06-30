@@ -35,6 +35,8 @@ fn main() {
         .allowlist_function("su_home_deinit")
         /* su root class */
         .allowlist_function("su_root_create")
+        .allowlist_function("su_root_run")
+        .allowlist_function("su_root_break")
         .allowlist_function("su_root_step")
         .allowlist_function("su_root_sleep")
         .allowlist_function("su_root_threading")

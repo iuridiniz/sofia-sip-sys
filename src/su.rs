@@ -40,6 +40,7 @@ impl Root {
         if self.c_ptr.is_null() {
             return;
         }
+        /* run in order to process any shutdown */
         self.rush_until_next_timer();
         unsafe {
             sys::su_root_destroy(self.c_ptr);
@@ -73,6 +74,36 @@ impl Root {
         unsafe { sys::su_root_sleep(root, timeout) }
     }
 
+    pub fn run(&self) {
+        self._run()
+    }
+
+    #[inline]
+    pub(crate) fn _run(&self) {
+        assert!(!self.c_ptr.is_null());
+        let root: *mut sys::su_root_t = self.c_ptr;
+        unsafe { sys::su_root_run(root) }
+    }
+
+    pub fn r#break(&self) {
+        self._break()
+    }
+
+    pub fn break_(&self) {
+        self.r#break()
+    }
+
+    #[inline]
+    pub(crate) fn _break(&self) {
+        assert!(!self.c_ptr.is_null());
+        let root: *mut sys::su_root_t = self.c_ptr;
+        unsafe { sys::su_root_break(root) }
+    }
+
+}
+
+/* extra functions (without C equivalent) */
+impl Root {
     pub fn rush_until_next_timer(&self) {
         loop {
             let remaining = self.step(Some(1));
@@ -233,12 +264,14 @@ pub(crate) fn deinit_default_root() {
 pub fn main_loop_run() -> Result<()> {
     let root = get_default_root_as_mut()?;
     root.rush();
+    //root.run();
     Ok(())
 }
 
 pub fn main_loop_quit() {
     if let Ok(root) = get_default_root_as_mut() {
         root.stop()
+        //root.break();
     };
 }
 
