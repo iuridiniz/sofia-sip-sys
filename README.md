@@ -29,15 +29,18 @@ sofia-sip = "*"
 - Sofia-SIP C library: [LGPL-2.1-or-later](https://choosealicense.com/licenses/lgpl-2.1/)
 
 Before compiling statically, please read [this](https://www.gnu.org/licenses/gpl-faq.html#LGPLStaticVsDynamic).
+
 ## Roadmap
 - Version 0.1.0
+    - Mua: Basic support to send and receive SIP MESSAGE's, allowing to create a chat using SIP.
+
+- Version 0.2.0
     - NUA: Basic support to send SIP INVITE(SDP)/REGISTER(auth) and receive SIP INVITE(SDP), allowing to create a simple soft phone.
     - Others modules: basic support to make NUA objectives work.
 
-- Version 0.2.0
+- Version 0.3.0
     - NUA: Support receive SIP REGISTER(auth), allowing to create a simple SIP PBX.
     - Others modules: basic support to make NUA objectives work.
-
 
 - Version 1.0.0
     - NUA: Full bindings for NUA.
