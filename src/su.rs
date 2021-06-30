@@ -17,9 +17,9 @@ pub struct Root {
 impl Root {
     pub fn new() -> Result<Root> {
         init()?;
-        Root::_new()
+        Root::_create()
     }
-    fn _new() -> Result<Root> {
+    fn _create() -> Result<Root> {
         let root: *mut sys::su_root_t = unsafe { sys::su_root_create(std::ptr::null_mut() as _) };
 
         if root.is_null() {
@@ -40,8 +40,8 @@ impl Root {
         if self.c_ptr.is_null() {
             return;
         }
-        /* run in order to process any shutdown */
-        self.rush_until_next_timer();
+        /* run in order to process any shutdown? */
+        // self.rush_until_next_timer();
         unsafe {
             sys::su_root_destroy(self.c_ptr);
         }
@@ -208,7 +208,7 @@ pub fn init_default_root() -> Result<()> {
     match is_default_root_initialized() {
         true => Ok(()),
         false => {
-            let root = Root::_new()?;
+            let root = Root::_create()?;
             /*
             According to https://doc.rust-lang.org/std/keyword.static.html
             "Static items do not call drop at the end of the program."
