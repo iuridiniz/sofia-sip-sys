@@ -328,7 +328,7 @@ pub(crate) mod tests {
 
     #[test]
     #[serial]
-    fn step_must_return_negative_meaning_value_no_steps_to_run() {wrap(|| {
+    fn step_must_return_negative_meaning_no_steps_to_run() {wrap(|| {
         let root = Root::new().unwrap();
         assert_eq!(root.step(Some(1)), -1);
     })}
