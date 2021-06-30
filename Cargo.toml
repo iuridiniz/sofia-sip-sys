@@ -5,6 +5,7 @@ description = "Rust bindings for sofia-sip"
 edition = "2018"
 # the bindings are MIT, but sofia-sip-sys is LGPL-2.1-or-later.
 license = "MIT"
+keywords = ["sip", "voip", "sofia"]
 links = "sofia-sip-ua"
 name = "sofia-sip"
 repository = "https://github.com/iuridiniz/sofia-sip-sys/"
