@@ -271,7 +271,8 @@ mod tests {
     #[test]
     // #[ignore]
     #[serial]
-    fn send_message_to_myself() {
+    fn send_message_to_myself() {wrap(|| {
+
         /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
         /*
         A
@@ -282,54 +283,49 @@ mod tests {
         |
         */
 
-        wrap(|| {
+        let root = su::Root::new().unwrap();
+        let url = std::rc::Rc::new("sip:127.0.0.1:9997");
 
-            let root = su::Root::new().unwrap();
-            let url = std::rc::Rc::new("sip:127.0.0.1:5080");
+        let mut nua = {
+            let url = Tag::NuUrl(url.clone().to_string()).unwrap();
+            Builder::default()
+                .root(&root)
+                .tag(url)
+                .create().unwrap()
+        };
 
-            let mut nua = {
-                let url = Tag::NuUrl(url.clone().to_string()).unwrap();
-                Builder::default()
-                    .root(&root)
-                    .tag(url)
-                    .create().unwrap()
-            };
-
-            nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
-                dbg!(&nua, &event, &status, &phrase);
-
-            });
-
-
-            let handle = Builder::default()
-                .tag(Tag::SipTo(url.clone().to_string()).unwrap())
-                .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
-                .create_handle(&nua).unwrap();
-
-            // dbg!(&handle);
-
-            let tags = Builder::default()
-                .tag(Tag::SipSubject("NUA".to_string()).unwrap())
-                .tag(Tag::SipTo(url.clone().to_string()).unwrap())
-                .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
-                .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
-                .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
-                .create_tags();
-            // dbg!(&tags);
+        nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
+            dbg!(&nua, &event, &status, &phrase);
+            // let root: &su::Root = nua.root();
+            match event {
+                Event::ReplyShutdown => {
+                    // root.quit();
+                },
+                _ => {},
+            }
+        });
 
 
-            // println!("BEFORE MESSAGE");
-            handle.message(tags);
-            // println!("AFTER MESSAGE");
+        let handle = Builder::default()
+            .tag(Tag::SipTo(url.clone().to_string()).unwrap())
+            .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
+            .create_handle(&nua).unwrap();
 
-            root.sleep(1000);
+        // dbg!(&handle);
 
-            // println!("AFTER RUN");
+        let tags = Builder::default()
+            .tag(Tag::SipSubject("NUA".to_string()).unwrap())
+            .tag(Tag::SipTo(url.clone().to_string()).unwrap())
+            .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
+            .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
+            .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
+            .create_tags();
 
-            panic!("abort");
+        handle.message(tags);
+        root.sleep(1000);
 
-        })
-    }
+        panic!("abort");
+    })}
 
     #[test]
     #[ignore]

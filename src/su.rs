@@ -11,7 +11,7 @@ static mut DEFAULT_ROOT: Option<Root> = None;
 #[derive(Debug)]
 pub struct Root {
     pub(crate) c_ptr: *mut sys::su_root_t,
-    running: bool,
+    rushing: bool,
 }
 
 impl Root {
@@ -32,7 +32,7 @@ impl Root {
 
         Ok(Root {
             c_ptr: root,
-            running: false,
+            rushing: false,
         })
     }
 
@@ -40,7 +40,7 @@ impl Root {
         if self.c_ptr.is_null() {
             return;
         }
-        self.run_until_next_timer();
+        self.rush_until_next_timer();
         unsafe {
             sys::su_root_destroy(self.c_ptr);
         }
@@ -52,16 +52,28 @@ impl Root {
             Some(x) if x >= 0 && x < 1000 => x,
             _ => 100,
         };
+        self._step(timeout)
+    }
+
+    #[inline]
+    pub(crate) fn _step(&self, timeout: i64) -> i64 {
         assert!(!self.c_ptr.is_null());
-        unsafe { sys::su_root_step(self.c_ptr, timeout) }
+        let root: *mut sys::su_root_t = self.c_ptr;
+        unsafe { sys::su_root_step(root, timeout) }
     }
 
     pub fn sleep(&self, timeout: i64) -> i64 {
-        assert!(!self.c_ptr.is_null());
-        unsafe { sys::su_root_sleep(self.c_ptr, timeout) }
+        self._sleep(timeout)
     }
 
-    pub fn run_until_next_timer(&self) {
+    #[inline]
+    pub(crate) fn _sleep(&self, timeout: i64) -> i64 {
+        assert!(!self.c_ptr.is_null());
+        let root: *mut sys::su_root_t = self.c_ptr;
+        unsafe { sys::su_root_sleep(root, timeout) }
+    }
+
+    pub fn rush_until_next_timer(&self) {
         loop {
             let remaining = self.step(Some(1));
             // dbg!(remaining);
@@ -71,15 +83,11 @@ impl Root {
         }
     }
 
-    pub fn quit(&mut self) {
-        self.running = false;
-    }
-
-    pub fn run(&mut self) {
-        if self.running {
+    pub fn rush(&mut self) {
+        if self.rushing {
             return;
         }
-        self.running = true;
+        self.rushing = true;
 
         loop {
             /* clear errno */
@@ -92,10 +100,13 @@ impl Root {
                     break;
                 }
             }
-            if !self.running {
+            if !self.rushing {
                 break;
             }
         }
+    }
+    pub fn stop(&mut self) {
+        self.rushing = false;
     }
 }
 
@@ -221,13 +232,13 @@ pub(crate) fn deinit_default_root() {
 /*************/
 pub fn main_loop_run() -> Result<()> {
     let root = get_default_root_as_mut()?;
-    root.run();
+    root.rush();
     Ok(())
 }
 
 pub fn main_loop_quit() {
     if let Ok(root) = get_default_root_as_mut() {
-        root.quit()
+        root.stop()
     };
 }
 
