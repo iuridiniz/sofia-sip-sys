@@ -236,6 +236,19 @@ pub(crate) mod tests {
     use serial_test::serial;
     use super::*;
 
+    /* FIXME: Won't fix
+
+    If an error occurs in any test using this library, it could affect all others
+    following tests, since that this library need to be inited and deinit correctly.
+
+    So, we have to deinit it correctly before prossed to next test.
+    Fix this by doing a teardown per test (`wrap` does this)
+
+    Also, each test run from a different thread by default (see --test-threads on
+    `cargo test -- --help`) and need to be thread safe or do not use threads.
+    Fix this by doing a setup/teardown that runs only once for all tests
+    (`serial` can mitigate this)
+    */
     pub fn wrap(f: fn()) {
         /* manual deinit (tests do not run atexit) */
         if let Err(e) = std::panic::catch_unwind(|| {

@@ -30,6 +30,13 @@ mod tests {
         errno::errno().get_and_reset()
     }
 
+    /* FIXME:
+    If an error occurs in any test bellow, it could affect all others test,
+    since that this library need to be inited and deinit correctly.
+    When a test fails, the code needed to deinit the library is not executed.
+    A teardown must be configured, to always deinit the library like
+    crate::su::tests::wrap
+    */
     use crate::sys;
     use std::ffi::CString;
     use serial_test::serial;
