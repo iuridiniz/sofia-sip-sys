@@ -262,38 +262,30 @@ pub(crate) mod tests {
 
     #[test]
     #[serial]
-    fn su_init() {
-        wrap(|| {
+    fn su_init() {wrap(|| {
             assert_eq!(is_initialized(), false);
             init().unwrap();
             assert_eq!(is_initialized(), true);
-        });
-    }
+    })}
 
     #[test]
     #[serial]
-    fn su_init_default_root() {
-        wrap(|| {
+    fn su_init_default_root() {wrap(|| {
             assert_eq!(is_default_root_initialized(), false);
             init_default_root().unwrap();
             assert_eq!(is_default_root_initialized(), true);
-        });
-    }
+    })}
 
     #[test]
     #[serial]
-    fn create_root() {
-        wrap(|| {
+    fn create_root() {wrap(|| {
             Root::new().unwrap();
-        });
-    }
+    })}
 
     #[test]
     #[serial]
-    fn step_must_return_negative_meaning_value_no_steps_to_run() {
-        wrap(|| {
+    fn step_must_return_negative_meaning_value_no_steps_to_run() {wrap(|| {
             let root = Root::new().unwrap();
             assert_eq!(root.step(Some(1)), -1);
-        });
-    }
+    })}
 }

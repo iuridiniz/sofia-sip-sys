@@ -144,74 +144,66 @@ mod tests {
 
     #[test]
     #[serial]
-    fn create_nua_with_default_root() {
-        wrap(|| {
-            let b = Builder::default();
+    fn create_nua_with_default_root() {wrap(|| {
+        let b = Builder::default();
 
-            b.create().unwrap();
-        });
-    }
+        b.create().unwrap();
+    })}
 
     #[test]
     #[serial]
-    fn create_nua_with_custom_root() {
-        wrap(|| {
-            let root = su::Root::new().unwrap();
+    fn create_nua_with_custom_root() {wrap(|| {
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
+        let b = Builder::default();
+        let b = b.root(&root);
 
-            b.create().unwrap();
-        })
-    }
+        b.create().unwrap();
+    })}
 
 
     #[test]
     #[serial]
-    fn create_nua_with_custom_url() {
-        wrap(|| {
-            let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+    fn create_nua_with_custom_url() {wrap(|| {
+        let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
-            let b = b.tag(url);
+        let b = Builder::default();
+        let b = b.root(&root);
+        let b = b.tag(url);
 
-            b.create().unwrap();
-        })
-    }
+        b.create().unwrap();
+    })}
 
     #[test]
     #[serial]
-    fn create_two_nua_with_same_port() {
-        wrap(|| {
-            let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+    fn create_two_nua_with_same_port() {wrap(|| {
+        let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
-            let b = b.tag(url);
+        let b = Builder::default();
+        let b = b.root(&root);
+        let b = b.tag(url);
 
-            let _nua_a = b.create().unwrap();
+        let _nua_a = b.create().unwrap();
 
-            let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+        let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
-            let b = b.tag(url);
+        let b = Builder::default();
+        let b = b.root(&root);
+        let b = b.tag(url);
 
-            assert!(b.create().is_err());
-        })
-    }
+        assert!(b.create().is_err());
+    })}
 
     #[test]
     #[ignore]
     #[serial]
-    fn test_nua_a_send_message_to_nua_b() {
+    fn test_nua_a_send_message_to_nua_b() {wrap(|| {
         /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
 
         /*
@@ -221,62 +213,60 @@ mod tests {
         |                    |
         */
 
-        wrap(|| {
+        let root = su::Root::new().unwrap();
 
-            let root = su::Root::new().unwrap();
+        let mut nua_a = {
+            let url = Tag::NuUrl("sip:127.0.0.1:5080".to_string()).unwrap();
+            Builder::default()
+                .root(&root)
+                .tag(url)
+                .create().unwrap()
+        };
 
-            let mut nua_a = {
-                let url = Tag::NuUrl("sip:127.0.0.1:5080".to_string()).unwrap();
-                Builder::default()
-                    .root(&root)
-                    .tag(url)
-                    .create().unwrap()
-            };
+        // let nua_b = {
+        //     let url = Tag::NuUrl("sip:127.0.0.1:5081".to_string()).unwrap();
+        //     Builder::default()
+        //         .root(&root)
+        //         .tag(url)
+        //         .create().unwrap()
+        // };
 
-            // let nua_b = {
-            //     let url = Tag::NuUrl("sip:127.0.0.1:5081".to_string()).unwrap();
-            //     Builder::default()
-            //         .root(&root)
-            //         .tag(url)
-            //         .create().unwrap()
-            // };
+        nua_a.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
+            dbg!(&nua, &event, &status, &phrase);
 
-            nua_a.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
-                dbg!(&nua, &event, &status, &phrase);
+        });
 
-            });
-
-            let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678".to_string();
+        let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678".to_string();
 
 
-            let handle = Builder::default()
-                // .tag(Tag::SipTo(url.clone()).unwrap())
-                // .tag(Tag::NuUrl(url.clone()).unwrap())
-                .create_handle(&nua_a).unwrap();
+        let handle = Builder::default()
+            // .tag(Tag::SipTo(url.clone()).unwrap())
+            // .tag(Tag::NuUrl(url.clone()).unwrap())
+            .create_handle(&nua_a).unwrap();
 
-            // dbg!(&handle);
+        // dbg!(&handle);
 
-            let tags = Builder::default()
-                .tag(Tag::SipSubject("NUA".to_string()).unwrap())
-                .tag(Tag::SipTo(url.clone()).unwrap())
-                .tag(Tag::NuUrl(url.clone()).unwrap())
-                .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
-                .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
-                .create_tags();
-            // dbg!(&tags);
+        let tags = Builder::default()
+            .tag(Tag::SipSubject("NUA".to_string()).unwrap())
+            .tag(Tag::SipTo(url.clone()).unwrap())
+            .tag(Tag::NuUrl(url.clone()).unwrap())
+            .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
+            .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
+            .create_tags();
+        // dbg!(&tags);
 
 
-            println!("BEFORE MESSAGE");
-            handle.message(tags);
-            println!("AFTER MESSAGE");
+        println!("BEFORE MESSAGE");
+        handle.message(tags);
+        println!("AFTER MESSAGE");
 
-            root.sleep(100);
-            println!("AFTER RUN");
+        root.sleep(100);
+        println!("AFTER RUN");
 
-            panic!("abort");
+        panic!("abort");
 
-        })
-    }
+
+    })}
 
     #[test]
     // #[ignore]
@@ -344,54 +334,10 @@ mod tests {
     #[test]
     #[ignore]
     #[serial]
-    fn send_register_to_myself() {
-
-        wrap(|| {
-
-            let root = su::Root::new().unwrap();
-            let url = std::rc::Rc::new("sip:127.0.0.1:5080");
-
-            let mut nua = {
-                let url = Tag::NuUrl(url.clone().to_string()).unwrap();
-                Builder::default()
-                    .root(&root)
-                    .tag(url)
-                    .create().unwrap()
-            };
-
-            nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String|{
-                dbg!(&nua, &event, &status, &phrase);
-
-            });
+    fn send_register_to_myself() {wrap(|| {
 
 
-            let handle = Builder::default()
-                .tag(Tag::SipTo(url.clone().to_string()).unwrap())
-                .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
-                .create_handle(&nua).unwrap();
 
-            // dbg!(&handle);
-
-            let tags = Builder::default()
-                .tag(Tag::SipSubject("NUA".to_string()).unwrap())
-                .tag(Tag::SipTo(url.clone().to_string()).unwrap())
-                .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
-                .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
-                .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
-                .create_tags();
-            dbg!(&tags);
-
-
-            // println!("BEFORE MESSAGE");
-            handle.message(tags);
-            // println!("AFTER MESSAGE");
-
-            root.sleep(1000);
-            // println!("AFTER RUN");
-
-            panic!("abort");
-
-        })
-    }
+    })}
 
 }
