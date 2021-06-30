@@ -12,6 +12,14 @@ Add the following to your `Cargo.toml`:
 [dependencies]
 sofia-sip = "*"
 ```
+
+## Documentation
+
+Sofia-SIP Rust bindings tries to mimic almost as possible the API of Sofia-SIP C library. You can start by learning the concepts of [Sofia SIP User Agent Library - "nua" - High-Level User Agent Module
+](http://sofia-sip.sourceforge.net/refdocs/nua/).
+
+After this intro, please read [the tests from Nua module](https://github.com/iuridiniz/sofia-sip-sys/blob/main/src/nua/nua.rs).
+
 ## Acknowledgements
 
  - [Original Sofia-SIP (not currently maintained)](http://sofia-sip.sourceforge.net/).
@@ -48,9 +56,4 @@ Before compiling statically, please read [this](https://www.gnu.org/licenses/gpl
 
 NUA is the High-Level User Agent Module of lib-sofia. To learn more about sofia modules, go to [reference documentation for libsofia-sip-ua submodules](http://sofia-sip.sourceforge.net/refdocs/building.html).
 
-## Documentation
 
-Sofia-SIP Rust bindings tries to mimic almost as possible the API of Sofia-SIP C library. You can start by learn the concepts of [Sofia SIP User Agent Library - "nua" - High-Level User Agent Module
-](http://sofia-sip.sourceforge.net/refdocs/nua/).
-
-After this intro, please read [the tests from Nua module](https://github.com/iuridiniz/sofia-sip-sys/blob/main/src/nua/nua.rs).
