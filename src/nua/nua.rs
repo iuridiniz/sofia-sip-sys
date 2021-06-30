@@ -10,7 +10,7 @@ pub use crate::nua::event::EventClosure;
 pub struct Nua<'a> {
     pub(crate) root: Option<&'a su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
-    pub(crate) closure: Option<Box<EventClosure>>,
+    pub(crate) closure: Option<Box<dyn Fn(&mut Nua, Event, u32, String) + 'a>>,
     shutdown_completed: bool,
 }
 
@@ -91,7 +91,7 @@ impl<'a> Nua<'a> {
         }
     }
 
-    pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'static>(&mut self, cb: F) {
+    pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'a>(&mut self, cb: F) {
         self.closure = Some(Box::new(cb));
     }
 
