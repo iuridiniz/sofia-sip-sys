@@ -160,7 +160,7 @@ mod tests {
     #[test]
     #[serial]
     fn create_nua_with_custom_url() {wrap(|| {
-        let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
 
         let root = su::Root::new().unwrap();
 
@@ -174,7 +174,7 @@ mod tests {
     #[test]
     #[serial]
     fn create_two_nua_with_same_port() {wrap(|| {
-        let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
 
         let root = su::Root::new().unwrap();
 
@@ -184,7 +184,7 @@ mod tests {
 
         let _nua_a = b.create().unwrap();
 
-        let url = Tag::NuUrl("sip:*:5080".to_string()).unwrap();
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
 
         let root = su::Root::new().unwrap();
 
@@ -211,7 +211,7 @@ mod tests {
         let root = su::Root::new().unwrap();
 
         let mut nua_a = {
-            let url = Tag::NuUrl("sip:127.0.0.1:5080".to_string()).unwrap();
+            let url = Tag::NuUrl("sip:127.0.0.1:5080").unwrap();
             Builder::default()
                 .root(&root)
                 .tag(url)
@@ -219,7 +219,7 @@ mod tests {
         };
 
         // let nua_b = {
-        //     let url = Tag::NuUrl("sip:127.0.0.1:5081".to_string()).unwrap();
+        //     let url = Tag::NuUrl("sip:127.0.0.1:5081").unwrap();
         //     Builder::default()
         //         .root(&root)
         //         .tag(url)
@@ -231,7 +231,7 @@ mod tests {
 
         });
 
-        let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678".to_string();
+        let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678";
 
 
         let handle = Builder::default()
@@ -242,11 +242,11 @@ mod tests {
         // dbg!(&handle);
 
         let tags = Builder::default()
-            .tag(Tag::SipSubject("NUA".to_string()).unwrap())
+            .tag(Tag::SipSubject("NUA").unwrap())
             .tag(Tag::SipTo(url.clone()).unwrap())
             .tag(Tag::NuUrl(url.clone()).unwrap())
-            .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
-            .tag(Tag::SipPayload("Hi\n".to_string()).unwrap())
+            .tag(Tag::SipContentType("text/plain").unwrap())
+            .tag(Tag::SipPayload("Hi\n").unwrap())
             .create_tags();
         // dbg!(&tags);
 
@@ -282,7 +282,7 @@ mod tests {
         let url = std::rc::Rc::new("sip:127.0.0.1:9997");
 
         let mut nua = {
-            let url = Tag::NuUrl(url.clone().to_string()).unwrap();
+            let url = Tag::NuUrl(&url.clone()).unwrap();
             Builder::default()
                 .root(&root)
                 .tag(url)
@@ -310,18 +310,18 @@ mod tests {
 
 
         let handle = Builder::default()
-            .tag(Tag::SipTo(url.clone().to_string()).unwrap())
-            .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
+            .tag(Tag::SipTo(&url.clone()).unwrap())
+            .tag(Tag::NuUrl(&url.clone()).unwrap())
             .create_handle(&nua).unwrap();
 
         // dbg!(&handle);
 
         let tags = Builder::default()
-            .tag(Tag::SipSubject("NUA".to_string()).unwrap())
-            .tag(Tag::SipTo(url.clone().to_string()).unwrap())
-            .tag(Tag::NuUrl(url.clone().to_string()).unwrap())
-            .tag(Tag::SipContentType("text/plain".to_string()).unwrap())
-            .tag(Tag::SipPayload(my_message.to_owned()).unwrap())
+            .tag(Tag::SipSubject("NUA").unwrap())
+            .tag(Tag::SipTo(&url.clone()).unwrap())
+            .tag(Tag::NuUrl(&url.clone()).unwrap())
+            .tag(Tag::SipContentType("text/plain").unwrap())
+            .tag(Tag::SipPayload(my_message).unwrap())
             .create_tags();
 
         handle.message(tags);

@@ -46,27 +46,27 @@ impl Tag {
     }
 
     #[allow(non_snake_case)]
-    pub fn NuUrl(url: String) -> Result<Self> {
+    pub fn NuUrl(url: &str) -> Result<Self> {
         Ok(Tag::_NuUrl(CString::new(url)?))
     }
 
     #[allow(non_snake_case)]
-    pub fn SipSubject(s: String) -> Result<Self> {
+    pub fn SipSubject(s: &str) -> Result<Self> {
         Ok(Tag::_SipSubjectStr(CString::new(s)?))
     }
 
     #[allow(non_snake_case)]
-    pub fn SipContentType(s: String) -> Result<Self> {
+    pub fn SipContentType(s: &str) -> Result<Self> {
         Ok(Tag::_SipContentTypeStr(CString::new(s)?))
     }
 
     #[allow(non_snake_case)]
-    pub fn SipPayload(s: String) -> Result<Self> {
+    pub fn SipPayload(s: &str) -> Result<Self> {
         Ok(Tag::_SipPayloadStr(CString::new(s)?))
     }
 
     #[allow(non_snake_case)]
-    pub fn SipTo(s: String) -> Result<Self> {
+    pub fn SipTo(s: &str) -> Result<Self> {
         Ok(Tag::_SipToStr(CString::new(s)?))
     }
 }
