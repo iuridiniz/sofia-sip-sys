@@ -368,7 +368,7 @@ mod tests {
             ) {
                 dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
 
-                match (_event) {
+                match _event {
                     sys::nua_event_e_nua_r_shutdown => {
                         println!("Answer to nua_shutdown()");
                     },
