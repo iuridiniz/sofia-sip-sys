@@ -105,12 +105,12 @@ impl<'a> Nua<'a> {
     }
 
     pub fn shutdown_and_wait(&self) {
-        if self.shutdown_completed == true {
+        if self.shutdown_completed {
             return;
         }
 
         self.shutdown();
-        while self.shutdown_completed == false {
+        while !self.shutdown_completed {
             if self.root().step(Some(1)) < 0 {
                 break;
             }
@@ -118,9 +118,10 @@ impl<'a> Nua<'a> {
     }
 
     pub fn shutdown(&self) {
-        if self.shutdown_completed == false {
-            self._shutdown();
+        if self.shutdown_completed {
+            return;
         }
+        self._shutdown();
     }
 
     fn _shutdown(&self) {
@@ -129,6 +130,11 @@ impl<'a> Nua<'a> {
     }
 
     pub(crate) fn destroy(&mut self) {
+        if self.c_ptr.is_null() {
+            return;
+        }
+        /* before destroy we need to shutdown and wait for that shutdown */
+        self.shutdown_and_wait();
         self._destroy();
     }
 
@@ -136,8 +142,7 @@ impl<'a> Nua<'a> {
         if self.c_ptr.is_null() {
             return;
         }
-        /* before destroy we need to shutdown and wait for that shutdown */
-        self.shutdown_and_wait();
+
         unsafe {
             sys::nua_destroy(self.c_ptr);
         };
