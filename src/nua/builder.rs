@@ -143,28 +143,28 @@ extern "C" fn nua_callback_glue(
         let sys_handle = _nh; /* ignored */
 
         let handle: *mut Handle = _hmagic as *mut Handle;
-        let handle_struct: Option<&Handle>;
+        // let handle_struct: Option<&Handle>;
         if !handle.is_null() {
             println!("++ OUTGOING SIP MESSAGE");
             /* reply to a handle function (outgoing sip message) */
             let handle_struct_temp: &Handle = unsafe { &*handle };
             assert_eq!(sys_handle, handle_struct_temp.c_ptr);
-            handle_struct = Some(handle_struct_temp);
+            // handle_struct = Some(handle_struct_temp);
         } else {
             if !sys_handle.is_null() {
                 /* incoming session (incoming sip message) */
                 println!("++ INCOMING SIP MESSAGE");
-                handle_struct = None;
+                // handle_struct = None;
             } else {
                 println!("++ EVENT WITHOUT SESSION");
                 /* no session, Nua stack other events */
-                handle_struct = None;
+                // handle_struct = None;
             }
         }
 
-        dbg!(&event, nua_struct, nua, handle_struct, handle);
+        // dbg!(&event, nua_struct, nua, handle_struct, handle);
 
-        nua_struct.on_sys_nua_event(event, status, phrase, nua, handle_struct, handle);
+        Nua::_on_sys_nua_event(event, status, phrase, nua, handle);
     }) {
         // Code here must be panic-free.
         eprintln!("PANIC!! while calling a callback from C: {:?}", e);

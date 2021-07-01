@@ -80,22 +80,25 @@ impl<'a> Nua<'a> {
         Ok(nua_sys)
     }
 
-    pub(crate) fn on_sys_nua_event(
-        &self,
+    pub(crate) fn _on_sys_nua_event(
         event: Event,
         status: u32,
         phrase: String,
         nua_ptr: *mut Nua,
-        handle: Option<&Handle>,
         handle_ptr: *mut Handle,
     ) {
+        /* FIXME: not thread safe, we borrow Nua as imutable and mutable at same time */
+        assert!(!nua_ptr.is_null());
         let nua = unsafe { &mut *nua_ptr };
+        let nua_for_closure = unsafe { &mut *nua_ptr };
+
         match (&event, status) {
             (Event::ReplyShutdown, x) if x >= 200 => nua.shutdown_completed = true,
             (_, _) => {}
         }
-        if let Some(cb) = &self.closure {
-            cb(nua, event, status, phrase);
+
+        if let Some(cb) = &nua.closure {
+            cb(nua_for_closure, event, status, phrase);
         }
     }
 

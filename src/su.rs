@@ -42,6 +42,7 @@ impl Root {
         self._destroy()
     }
 
+    #[inline]
     pub(crate) fn _destroy(&mut self) {
         if self.c_ptr.is_null() {
             return;
@@ -115,32 +116,6 @@ impl Root {
                 break;
             }
         }
-    }
-
-    pub fn rush(&mut self) {
-        if self.rushing {
-            return;
-        }
-        self.rushing = true;
-
-        loop {
-            /* clear errno */
-            errno();
-            let remaining = self.step(None);
-
-            if remaining < 0 {
-                let err = errno();
-                if err != ERROR_NONE {
-                    break;
-                }
-            }
-            if !self.rushing {
-                break;
-            }
-        }
-    }
-    pub fn stop(&mut self) {
-        self.rushing = false;
     }
 }
 
@@ -248,8 +223,9 @@ fn get_default_root_as_mut() -> Result<&'static mut Root> {
     Ok(root)
 }
 
-pub fn get_default_root() -> Result<&'static mut Root> {
-    get_default_root_as_mut()
+pub fn get_default_root() -> Result<&'static Root> {
+    let root = get_default_root_as_mut()?;
+    Ok(root)
 }
 
 pub(crate) fn deinit_default_root() {
@@ -265,16 +241,14 @@ pub(crate) fn deinit_default_root() {
 /* MAIN LOOP */
 /*************/
 pub fn main_loop_run() -> Result<()> {
-    let root = get_default_root_as_mut()?;
-    root.rush();
-    //root.run();
+    let root = get_default_root()?;
+    root.run();
     Ok(())
 }
 
 pub fn main_loop_quit() {
     if let Ok(root) = get_default_root_as_mut() {
-        root.stop()
-        //root.break();
+        root.break_()
     };
 }
 
