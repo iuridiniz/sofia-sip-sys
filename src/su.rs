@@ -11,7 +11,7 @@ static mut DEFAULT_ROOT: Option<Root> = None;
 #[derive(Debug)]
 pub struct Root {
     pub(crate) c_ptr: *mut sys::su_root_t,
-    rushing: bool,
+    pub(crate) rushing: bool,
 }
 
 impl Root {
@@ -281,6 +281,7 @@ pub fn main_loop_quit() {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use adorn::adorn;
     use serial_test::serial;
 
     /* FIXME: Won't fix
@@ -309,38 +310,34 @@ pub(crate) mod tests {
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn su_init() {
-        wrap(|| {
-            assert_eq!(is_initialized(), false);
-            init().unwrap();
-            assert_eq!(is_initialized(), true);
-        })
+        assert_eq!(is_initialized(), false);
+        init().unwrap();
+        assert_eq!(is_initialized(), true);
     }
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn su_init_default_root() {
-        wrap(|| {
-            assert_eq!(is_default_root_initialized(), false);
-            init_default_root().unwrap();
-            assert_eq!(is_default_root_initialized(), true);
-        })
+        assert_eq!(is_default_root_initialized(), false);
+        init_default_root().unwrap();
+        assert_eq!(is_default_root_initialized(), true);
     }
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn create_root() {
-        wrap(|| {
-            Root::new().unwrap();
-        })
+        Root::new().unwrap();
     }
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn step_must_return_negative_meaning_no_steps_to_run() {
-        wrap(|| {
-            let root = Root::new().unwrap();
-            assert_eq!(root.step(Some(1)), -1);
-        })
+        let root = Root::new().unwrap();
+        assert_eq!(root.step(Some(1)), -1);
     }
 }

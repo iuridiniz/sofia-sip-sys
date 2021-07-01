@@ -4,8 +4,8 @@ build = "build.rs"
 description = "Rust bindings for sofia-sip"
 edition = "2018"
 # the bindings are MIT, but sofia-sip-sys is LGPL-2.1-or-later.
-license = "MIT"
 keywords = ["sip", "voip", "sofia"]
+license = "MIT"
 links = "sofia-sip-ua"
 name = "sofia-sip"
 repository = "https://github.com/iuridiniz/sofia-sip-sys/"
@@ -24,6 +24,7 @@ errno = "0.2.7"
 optargs = "0.1.2"
 
 [dev-dependencies]
+adorn = "0.4.0"
 serial_test = "0.5.1"
 
 [profile.test]

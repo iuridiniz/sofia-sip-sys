@@ -143,20 +143,21 @@ mod tests {
     use super::su::tests::wrap;
     use super::*;
     use crate::Tag;
+    use adorn::adorn;
     use serial_test::serial;
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn create_nua_with_default_root() {
-        wrap(|| {
-            let b = Builder::default();
+        let b = Builder::default();
 
-            b.create().unwrap();
-        })
+        b.create().unwrap();
     }
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn create_nua_with_custom_root() {
         wrap(|| {
             let root = su::Root::new().unwrap();
@@ -170,6 +171,7 @@ mod tests {
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn create_nua_with_custom_url() {
         wrap(|| {
             let url = Tag::NuUrl("sip:*:5080").unwrap();
@@ -186,6 +188,7 @@ mod tests {
 
     #[test]
     #[serial]
+    #[adorn(wrap)]
     fn create_two_nua_with_same_port() {
         wrap(|| {
             let url = Tag::NuUrl("sip:*:5080").unwrap();
@@ -213,6 +216,7 @@ mod tests {
     #[test]
     #[ignore]
     #[serial]
+    #[adorn(wrap)]
     fn test_nua_a_send_message_to_nua_b() {
         wrap(|| {
             /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
@@ -295,6 +299,7 @@ mod tests {
     #[test]
     // #[ignore]
     #[serial]
+    #[adorn(wrap)]
     fn send_message_to_myself() {
         wrap(|| {
             /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
@@ -361,7 +366,6 @@ mod tests {
     #[test]
     #[ignore]
     #[serial]
-    fn send_register_to_myself() {
-        wrap(|| {})
-    }
+    #[adorn(wrap)]
+    fn send_register_to_myself() {}
 }

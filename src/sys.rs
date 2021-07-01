@@ -6,7 +6,6 @@
 #![allow(non_snake_case)]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-
 #[cfg(test)]
 mod tests {
     // https://chromium.googlesource.com/chromiumos/docs/+/master/constants/errnos.md
@@ -38,8 +37,8 @@ mod tests {
     crate::su::tests::wrap
     */
     use crate::sys;
-    use std::ffi::CString;
     use serial_test::serial;
+    use std::ffi::CString;
     #[test]
     #[serial]
     fn test_nua_init_and_deinit_with_threads() {
@@ -218,10 +217,10 @@ mod tests {
     fn test_su_root_null() {
         errno();
         let null: *const std::os::raw::c_void = std::ptr::null();
-        /* test call with NULL */
         assert_eq!(errno(), ERROR_NONE);
         let remaining;
         unsafe {
+            /* test call with NULL */
             remaining = sys::su_root_step(null as *mut sys::su_root_t, 1000);
         }
         assert_eq!(remaining, -1);
@@ -371,20 +370,19 @@ mod tests {
                 match _event {
                     sys::nua_event_e_nua_r_shutdown => {
                         println!("Answer to nua_shutdown()");
-                    },
+                    }
                     sys::nua_event_e_nua_i_message => {
                         println!("Incoming MESSAGE");
-                    },
+                    }
                     sys::nua_event_e_nua_r_message => {
                         println!("Answer to outgoing MESSAGE");
-                        unsafe{ sys::nua_shutdown(_nua) };
+                        unsafe { sys::nua_shutdown(_nua) };
                     }
                     _ => {
                         println!("Unknown event");
                     }
                 }
                 println!("--------------------------------------");
-
             }
             let nutag_url = CString::new("sip:127.0.0.1:5088").unwrap();
             let nua = sys::nua_create(
@@ -401,27 +399,20 @@ mod tests {
             errno();
             // assert_ne!(errno(), ERROR_EADDRINUSE, "ERROR_EADDRINUSE");
 
-            let hl = sys::nua_handle (
+            let hl = sys::nua_handle(
                 nua,
                 null,
-
                 sys::nutag_url.as_ptr(),
                 nutag_url.as_ptr() as sys::tag_value_t,
-
                 sys::siptag_to_str.as_ptr(),
                 nutag_url.as_ptr() as sys::tag_value_t,
-
                 null as *const sys::tag_type_s,
                 0 as isize,
             );
             assert!(!hl.is_null());
             assert_eq!(errno(), ERROR_NONE);
 
-            sys::nua_message(
-                hl,
-                null as *const sys::tag_type_s,
-                0 as isize,
-            );
+            sys::nua_message(hl, null as *const sys::tag_type_s, 0 as isize);
 
             /* enter main loop for processing of messages (3) */
             sys::su_root_step(root, 0);
@@ -438,7 +429,6 @@ mod tests {
             /* deinitialize system utilities */
             sys::su_deinit();
             assert_eq!(errno(), ERROR_NONE);
-
         }
     }
 }
