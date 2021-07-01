@@ -116,9 +116,9 @@ extern "C" fn nua_callback_glue(
     _sip: *const sys::sip_t,
     _tags: *mut sys::tagi_t,
 ) {
-    println!("------ nua_callback_glue ------");
+    // println!("------ nua_callback_glue ------");
 
-    dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
+    // dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
 
     /*
     Panics can happen pretty much anywhere in Rust code.
@@ -155,6 +155,7 @@ extern "C" fn nua_callback_glue(
             assert_eq!(sys_handle, handle.c_ptr);
             // handle_struct = Some(handle_struct_temp);
         }
+        // println!("------ [nua_callback_glue] ------");
         Nua::_on_sys_nua_event(event, status, phrase, nua, handle);
     }) {
         // Code here must be panic-free.
@@ -162,5 +163,4 @@ extern "C" fn nua_callback_glue(
         // Abort is safe because it doesn't unwind.
         std::process::abort();
     }
-    println!("------ [nua_callback_glue] ------");
 }

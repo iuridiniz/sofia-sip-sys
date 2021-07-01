@@ -1,4 +1,4 @@
-use crate::error::{errno, Error, ERROR_NONE};
+use crate::error::{errno, Error};
 use crate::result::Result;
 use crate::sys;
 

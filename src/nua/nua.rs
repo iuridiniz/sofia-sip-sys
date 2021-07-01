@@ -85,7 +85,7 @@ impl<'a> Nua<'a> {
         status: u32,
         phrase: String,
         nua_ptr: *mut Nua,
-        handle_ptr: *mut Handle,
+        _handle_ptr: *mut Handle,
     ) {
         assert!(!nua_ptr.is_null());
         let nua = unsafe { &mut *nua_ptr };
@@ -310,7 +310,7 @@ mod tests {
     // #[ignore]
     #[serial]
     #[adorn(wrap)]
-    fn send_message_to_myself() {
+    fn nua_send_message_to_itself() {
         /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
         /*
 
