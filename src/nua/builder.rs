@@ -1,15 +1,15 @@
 // use crate::error::Error;
+use crate::nua::event::Event;
+use crate::nua::event::EventClosure;
+use crate::nua::handle::Handle;
+use crate::nua::Nua;
 use crate::result::Result;
 use crate::su;
 use crate::sys;
 use crate::tag::Tag;
-use crate::nua::Nua;
-use crate::nua::event::EventClosure;
-use crate::nua::event::Event;
-use crate::nua::handle::Handle;
 
-use std::ffi::CStr;
 use std::convert::TryFrom;
+use std::ffi::CStr;
 
 pub struct Builder<'a> {
     root: Option<&'a su::Root>,
@@ -27,7 +27,7 @@ impl<'a> std::fmt::Debug for Builder<'a> {
     }
 }
 
-pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec::<sys::tagi_t> {
+pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec<sys::tagi_t> {
     let mut sys_tags = Vec::<sys::tagi_t>::new();
     for tag in tags {
         sys_tags.push(tag.item());
@@ -58,7 +58,7 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn root(mut self, root:&'a su::Root) -> Self {
+    pub fn root(mut self, root: &'a su::Root) -> Self {
         self.root = Some(root);
         self
     }
@@ -91,7 +91,7 @@ impl<'a> Builder<'a> {
         self.create_nua()
     }
 
-    pub fn create_handle(self, nua:&'a Box<Nua<'_>>) -> Result<Box<Handle<'a>>> {
+    pub fn create_handle(self, nua: &'a Box<Nua<'_>>) -> Result<Box<Handle<'a>>> {
         let mut handle = Box::new(Handle::_new());
         let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
 
@@ -116,7 +116,9 @@ extern "C" fn nua_callback_glue(
     _sip: *const sys::sip_t,
     _tags: *mut sys::tagi_t,
 ) {
-    // dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
+    println!("------ nua_callback_glue ------");
+
+    dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
 
     /*
     Panics can happen pretty much anywhere in Rust code.
@@ -127,20 +129,47 @@ extern "C" fn nua_callback_glue(
         /* This call is expect to not panic if sofia does not changes their api */
         /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
-        let status = _status as u32;
-        let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
-        // let sys_nua: _nua;
-        let nua: *mut Nua = _magic as *mut Nua;
 
-        unsafe {
-            let nua_struct = &*nua;
-            // dbg!(&event, nua_struct);
-            nua_struct.on_sys_nua_event(event, status, phrase, nua);
+        let status = _status as u32;
+
+        let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
+
+        let sys_nua = _nua; /* ignored */
+
+        let nua: *mut Nua = _magic as *mut Nua;
+        let nua_struct: &Nua = unsafe { &*nua };
+        assert_eq!(sys_nua, nua_struct.c_ptr);
+
+        let sys_handle = _nh; /* ignored */
+
+        let handle: *mut Handle = _hmagic as *mut Handle;
+        let handle_struct: Option<&Handle>;
+        if !handle.is_null() {
+            println!("++ OUTGOING SIP MESSAGE");
+            /* reply to a handle function (outgoing sip message) */
+            let handle_struct_temp: &Handle = unsafe { &*handle };
+            assert_eq!(sys_handle, handle_struct_temp.c_ptr);
+            handle_struct = Some(handle_struct_temp);
+        } else {
+            if !sys_handle.is_null() {
+                /* incoming session (incoming sip message) */
+                println!("++ INCOMING SIP MESSAGE");
+                handle_struct = None;
+            } else {
+                println!("++ EVENT WITHOUT SESSION");
+                /* no session, Nua stack other events */
+                handle_struct = None;
+            }
         }
+
+        dbg!(&event, nua_struct, nua, handle_struct, handle);
+
+        nua_struct.on_sys_nua_event(event, status, phrase, nua, handle_struct, handle);
     }) {
         // Code here must be panic-free.
         eprintln!("PANIC!! while calling a callback from C: {:?}", e);
         // Abort is safe because it doesn't unwind.
         std::process::abort();
     }
+    println!("------ [nua_callback_glue] ------");
 }
