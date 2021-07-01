@@ -104,12 +104,11 @@ impl<'a> Nua<'a> {
         self.closure = Some(Box::new(cb));
     }
 
-    pub fn shutdown(&self) {
-        if self.shutdown_completed == false {
-            unsafe { sys::nua_shutdown(self.c_ptr) };
-        }
-    }
     pub fn shutdown_and_wait(&self) {
+        if self.shutdown_completed == true {
+            return;
+        }
+
         self.shutdown();
         while self.shutdown_completed == false {
             if self.root().step(Some(1)) < 0 {
@@ -118,24 +117,37 @@ impl<'a> Nua<'a> {
         }
     }
 
+    pub fn shutdown(&self) {
+        if self.shutdown_completed == false {
+            self._shutdown();
+        }
+    }
+
+    fn _shutdown(&self) {
+        assert!(!self.c_ptr.is_null());
+        unsafe { sys::nua_shutdown(self.c_ptr) };
+    }
+
+    pub(crate) fn destroy(&mut self) {
+        self._destroy();
+    }
+
     fn _destroy(&mut self) {
         if self.c_ptr.is_null() {
             return;
         }
-
         /* before destroy we need to shutdown and wait for that shutdown */
         self.shutdown_and_wait();
-
         unsafe {
             sys::nua_destroy(self.c_ptr);
-            self.c_ptr = std::ptr::null_mut();
-        }
+        };
+        self.c_ptr = std::ptr::null_mut();
     }
 }
 
 impl<'a> Drop for Nua<'a> {
     fn drop(&mut self) {
-        self._destroy()
+        self.destroy()
     }
 }
 
