@@ -177,58 +177,52 @@ mod tests {
     #[serial]
     #[adorn(wrap)]
     fn create_nua_with_custom_root() {
-        wrap(|| {
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
+        let b = Builder::default();
+        let b = b.root(&root);
 
-            b.create().unwrap();
-        })
+        b.create().unwrap();
     }
 
     #[test]
     #[serial]
     #[adorn(wrap)]
     fn create_nua_with_custom_url() {
-        wrap(|| {
-            let url = Tag::NuUrl("sip:*:5080").unwrap();
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
-            let b = b.tag(url);
+        let b = Builder::default();
+        let b = b.root(&root);
+        let b = b.tag(url);
 
-            b.create().unwrap();
-        })
+        b.create().unwrap();
     }
 
     #[test]
     #[serial]
     #[adorn(wrap)]
     fn create_two_nua_with_same_port() {
-        wrap(|| {
-            let url = Tag::NuUrl("sip:*:5080").unwrap();
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
-            let b = b.tag(url);
+        let b = Builder::default();
+        let b = b.root(&root);
+        let b = b.tag(url);
 
-            let _nua_a = b.create().unwrap();
+        let _nua_a = b.create().unwrap();
 
-            let url = Tag::NuUrl("sip:*:5080").unwrap();
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let b = Builder::default();
-            let b = b.root(&root);
-            let b = b.tag(url);
+        let b = Builder::default();
+        let b = b.root(&root);
+        let b = b.tag(url);
 
-            assert!(b.create().is_err());
-        })
+        assert!(b.create().is_err());
     }
 
     #[test]
@@ -236,82 +230,80 @@ mod tests {
     #[serial]
     #[adorn(wrap)]
     fn test_nua_a_send_message_to_nua_b() {
-        wrap(|| {
-            /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
+        /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
 
-            /*
-            A                    B
-            |-------MESSAGE----->|
-            |<--------200--------| (method allowed, responded)
-            |                    |
+        /*
+        A                    B
+        |-------MESSAGE----->|
+        |<--------200--------| (method allowed, responded)
+        |                    |
 
-                                   ______(NETWORK)_____
-                                  /                    \
-            A                 NUA STACK (A)         NUA STACK (B)             B
-            |                     |                     |                     |
-            |    nua::handle(B)   |                     |                     |
-            |-------------------->|                     |                     |
-            |                     |                     |                     |
-            |  handle::message()  |                     |                     |
-            |------------------->[_]      [MESSAGE]     |                     |
-            |                    [_]------------------>[_]   IncomingMessage  |
-            |                    [_]                   [_]------------------->|
-            |                    [_]                   [_]   nua::handle(A)   |
-            |                    [_]      [200 OK]     [_]                    |
-            |    ReplyMessage    [_]<------------------[_]                    |
-            |<------------------ [_]                    |                     |
-            |                     |                     |                     |
-            |                     |                     |                     |
+                               ______(NETWORK)_____
+                              /                    \
+        A                 NUA STACK (A)         NUA STACK (B)             B
+        |                     |                     |                     |
+        |    nua::handle(B)   |                     |                     |
+        |-------------------->|                     |                     |
+        |                     |                     |                     |
+        |  handle::message()  |                     |                     |
+        |------------------->[_]      [MESSAGE]     |                     |
+        |                    [_]------------------>[_]   IncomingMessage  |
+        |                    [_]                   [_]------------------->|
+        |                    [_]                   [_]   nua::handle(A)   |
+        |                    [_]      [200 OK]     [_]                    |
+        |    ReplyMessage    [_]<------------------[_]                    |
+        |<------------------ [_]                    |                     |
+        |                     |                     |                     |
+        |                     |                     |                     |
 
-            */
+        */
 
-            let root = su::Root::new().unwrap();
+        let root = su::Root::new().unwrap();
 
-            let mut nua_a = {
-                let url = Tag::NuUrl("sip:127.0.0.1:5080").unwrap();
-                Builder::default().root(&root).tag(url).create().unwrap()
-            };
+        let mut nua_a = {
+            let url = Tag::NuUrl("sip:127.0.0.1:5080").unwrap();
+            Builder::default().root(&root).tag(url).create().unwrap()
+        };
 
-            // let nua_b = {
-            //     let url = Tag::NuUrl("sip:127.0.0.1:5081").unwrap();
-            //     Builder::default()
-            //         .root(&root)
-            //         .tag(url)
-            //         .create().unwrap()
-            // };
+        // let nua_b = {
+        //     let url = Tag::NuUrl("sip:127.0.0.1:5081").unwrap();
+        //     Builder::default()
+        //         .root(&root)
+        //         .tag(url)
+        //         .create().unwrap()
+        // };
 
-            nua_a.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String| {
-                dbg!(&nua, &event, &status, &phrase);
-            });
+        nua_a.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String| {
+            dbg!(&nua, &event, &status, &phrase);
+        });
 
-            let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678";
+        let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678";
 
-            let handle = Builder::default()
-                // .tag(Tag::SipTo(url.clone()).unwrap())
-                // .tag(Tag::NuUrl(url.clone()).unwrap())
-                .create_handle(&nua_a)
-                .unwrap();
+        let handle = Builder::default()
+            // .tag(Tag::SipTo(url.clone()).unwrap())
+            // .tag(Tag::NuUrl(url.clone()).unwrap())
+            .create_handle(&nua_a)
+            .unwrap();
 
-            // dbg!(&handle);
+        // dbg!(&handle);
 
-            let tags = Builder::default()
-                .tag(Tag::SipSubject("NUA").unwrap())
-                .tag(Tag::SipTo(url.clone()).unwrap())
-                .tag(Tag::NuUrl(url.clone()).unwrap())
-                .tag(Tag::SipContentType("text/plain").unwrap())
-                .tag(Tag::SipPayload("Hi\n").unwrap())
-                .create_tags();
-            // dbg!(&tags);
+        let tags = Builder::default()
+            .tag(Tag::SipSubject("NUA").unwrap())
+            .tag(Tag::SipTo(url.clone()).unwrap())
+            .tag(Tag::NuUrl(url.clone()).unwrap())
+            .tag(Tag::SipContentType("text/plain").unwrap())
+            .tag(Tag::SipPayload("Hi\n").unwrap())
+            .create_tags();
+        // dbg!(&tags);
 
-            println!("BEFORE MESSAGE");
-            handle.message(tags);
-            println!("AFTER MESSAGE");
+        println!("BEFORE MESSAGE");
+        handle.message(tags);
+        println!("AFTER MESSAGE");
 
-            root.sleep(100);
-            println!("AFTER RUN");
+        root.sleep(100);
+        println!("AFTER RUN");
 
-            panic!("abort");
-        })
+        panic!("abort");
     }
 
     #[test]
@@ -319,66 +311,64 @@ mod tests {
     #[serial]
     #[adorn(wrap)]
     fn send_message_to_myself() {
-        wrap(|| {
-            /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
-            /*
+        /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
+        /*
 
-            A
-            |-------------------\
-            |<------MESSAGE-----/
-            |-------------------\
-            |<--------200-------/
-            |
+        A
+        |-------------------\
+        |<------MESSAGE-----/
+        |-------------------\
+        |<--------200-------/
+        |
 
-            */
-            let my_message = "Hi\n";
-            let root = su::Root::new().unwrap();
-            let url = std::rc::Rc::new("sip:127.0.0.1:9997");
+        */
+        let my_message = "Hi\n";
+        let root = su::Root::new().unwrap();
+        let url = std::rc::Rc::new("sip:127.0.0.1:9997");
 
-            let mut nua = {
-                let url = Tag::NuUrl(&url.clone()).unwrap();
-                Builder::default().root(&root).tag(url).create().unwrap()
-            };
-            {
-                // let my_message = my_message.clone();
-                nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String| {
-                    dbg!(&nua, &event, &status, &phrase);
-                    let root: &su::Root = nua.root();
-                    match event {
-                        Event::ReplyShutdown => {
-                            root.break_();
-                        }
-                        Event::IncomingMessage => {
-                            // dbg!(my_message);
-                        }
-                        Event::ReplyMessage => {
-                            // dbg!(my_message);
-                        }
-                        _ => {}
+        let mut nua = {
+            let url = Tag::NuUrl(&url.clone()).unwrap();
+            Builder::default().root(&root).tag(url).create().unwrap()
+        };
+        {
+            // let my_message = my_message.clone();
+            nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String| {
+                dbg!(&nua, &event, &status, &phrase);
+                let root: &su::Root = nua.root();
+                match event {
+                    Event::ReplyShutdown => {
+                        root.break_();
                     }
-                });
-            }
+                    Event::IncomingMessage => {
+                        // dbg!(my_message);
+                    }
+                    Event::ReplyMessage => {
+                        // dbg!(my_message);
+                    }
+                    _ => {}
+                }
+            });
+        }
 
-            let handle = Builder::default()
-                .tag(Tag::SipTo(&url.clone()).unwrap())
-                .tag(Tag::NuUrl(&url.clone()).unwrap())
-                .create_handle(&nua)
-                .unwrap();
+        let handle = Builder::default()
+            .tag(Tag::SipTo(&url.clone()).unwrap())
+            .tag(Tag::NuUrl(&url.clone()).unwrap())
+            .create_handle(&nua)
+            .unwrap();
 
-            // dbg!(&handle);
+        // dbg!(&handle);
 
-            let tags = Builder::default()
-                .tag(Tag::SipSubject("NUA").unwrap())
-                .tag(Tag::SipTo(&url.clone()).unwrap())
-                .tag(Tag::NuUrl(&url.clone()).unwrap())
-                .tag(Tag::SipContentType("text/plain").unwrap())
-                .tag(Tag::SipPayload(my_message).unwrap())
-                .create_tags();
+        let tags = Builder::default()
+            .tag(Tag::SipSubject("NUA").unwrap())
+            .tag(Tag::SipTo(&url.clone()).unwrap())
+            .tag(Tag::NuUrl(&url.clone()).unwrap())
+            .tag(Tag::SipContentType("text/plain").unwrap())
+            .tag(Tag::SipPayload(my_message).unwrap())
+            .create_tags();
 
-            handle.message(tags);
-            root.sleep(1000);
-            panic!("*********************** ABORTED ***********************");
-        })
+        handle.message(tags);
+        root.sleep(1000);
+        panic!("*********************** ABORTED ***********************");
     }
 
     #[test]
