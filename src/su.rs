@@ -36,12 +36,16 @@ impl Root {
         })
     }
 
+    pub(crate) fn destroy(&mut self) {
+        /* run in order to process any remaining shutdown? */
+        // self.rush_until_next_timer();
+        self._destroy()
+    }
+
     pub(crate) fn _destroy(&mut self) {
         if self.c_ptr.is_null() {
             return;
         }
-        /* run in order to process any shutdown? */
-        // self.rush_until_next_timer();
         unsafe {
             sys::su_root_destroy(self.c_ptr);
         }
@@ -99,7 +103,6 @@ impl Root {
         let root: *mut sys::su_root_t = self.c_ptr;
         unsafe { sys::su_root_break(root) }
     }
-
 }
 
 /* extra functions (without C equivalent) */
@@ -143,7 +146,7 @@ impl Root {
 
 impl Drop for Root {
     fn drop(&mut self) {
-        self._destroy()
+        self.destroy()
     }
 }
 
@@ -156,7 +159,8 @@ Check if it was called from the main thread before initilize.
 We could use a static mutex for all globals
 see http://gtk-rs.org/docs/src/gtk/rt.rs.html#83 (v0.9.0)
 */
-pub fn init() -> Result<()> { /* TODO: drop Result, not used */
+pub fn init() -> Result<()> {
+    /* TODO: drop Result, not used */
     match is_initialized() {
         true => Ok(()),
         false => {
@@ -183,7 +187,7 @@ pub fn is_initialized() -> bool {
 }
 
 pub fn deinit() {
-    if ! is_initialized() {
+    if !is_initialized() {
         return;
     }
     unsafe {
@@ -232,7 +236,6 @@ pub fn init_default_root() -> Result<()> {
     }
 }
 
-
 /// Returns `true` if default root has been initialized.
 #[inline]
 pub fn is_default_root_initialized() -> bool {
@@ -250,10 +253,10 @@ pub fn get_default_root() -> Result<&'static mut Root> {
 }
 
 pub(crate) fn deinit_default_root() {
-    if ! is_default_root_initialized() {
+    if !is_default_root_initialized() {
         return;
     }
-    get_default_root_as_mut().unwrap()._destroy();
+    get_default_root_as_mut().unwrap().destroy();
     unsafe { DEFAULT_ROOT = None };
     ROOT_INITIALIZED.store(false, Ordering::Release);
 }
@@ -277,8 +280,8 @@ pub fn main_loop_quit() {
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use serial_test::serial;
     use super::*;
+    use serial_test::serial;
 
     /* FIXME: Won't fix
 
@@ -306,30 +309,38 @@ pub(crate) mod tests {
 
     #[test]
     #[serial]
-    fn su_init() {wrap(|| {
-        assert_eq!(is_initialized(), false);
-        init().unwrap();
-        assert_eq!(is_initialized(), true);
-    })}
+    fn su_init() {
+        wrap(|| {
+            assert_eq!(is_initialized(), false);
+            init().unwrap();
+            assert_eq!(is_initialized(), true);
+        })
+    }
 
     #[test]
     #[serial]
-    fn su_init_default_root() {wrap(|| {
-        assert_eq!(is_default_root_initialized(), false);
-        init_default_root().unwrap();
-        assert_eq!(is_default_root_initialized(), true);
-    })}
+    fn su_init_default_root() {
+        wrap(|| {
+            assert_eq!(is_default_root_initialized(), false);
+            init_default_root().unwrap();
+            assert_eq!(is_default_root_initialized(), true);
+        })
+    }
 
     #[test]
     #[serial]
-    fn create_root() {wrap(|| {
-        Root::new().unwrap();
-    })}
+    fn create_root() {
+        wrap(|| {
+            Root::new().unwrap();
+        })
+    }
 
     #[test]
     #[serial]
-    fn step_must_return_negative_meaning_no_steps_to_run() {wrap(|| {
-        let root = Root::new().unwrap();
-        assert_eq!(root.step(Some(1)), -1);
-    })}
+    fn step_must_return_negative_meaning_no_steps_to_run() {
+        wrap(|| {
+            let root = Root::new().unwrap();
+            assert_eq!(root.step(Some(1)), -1);
+        })
+    }
 }
