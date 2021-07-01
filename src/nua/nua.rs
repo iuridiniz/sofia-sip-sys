@@ -87,17 +87,15 @@ impl<'a> Nua<'a> {
         nua_ptr: *mut Nua,
         handle_ptr: *mut Handle,
     ) {
-        /* FIXME: not thread safe, we borrow Nua as imutable and mutable at same time */
         assert!(!nua_ptr.is_null());
         let nua = unsafe { &mut *nua_ptr };
-        let nua_for_closure = unsafe { &mut *nua_ptr };
-
         match (&event, status) {
             (Event::ReplyShutdown, x) if x >= 200 => nua.shutdown_completed = true,
             (_, _) => {}
         }
-
         if let Some(cb) = &nua.closure {
+            /* FIXME: not thread safe, we create a alias to a mutable Nua */
+            let nua_for_closure = unsafe { &mut *nua_ptr };
             cb(nua_for_closure, event, status, phrase);
         }
     }

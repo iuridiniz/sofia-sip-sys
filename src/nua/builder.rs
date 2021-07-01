@@ -137,33 +137,24 @@ extern "C" fn nua_callback_glue(
         let sys_nua = _nua; /* ignored */
 
         let nua: *mut Nua = _magic as *mut Nua;
-        let nua_struct: &Nua = unsafe { &*nua };
-        assert_eq!(sys_nua, nua_struct.c_ptr);
+
+        /* sanity check */
+        {
+            assert!(!nua.is_null());
+            let nua: &Nua = unsafe { &*nua };
+            assert_eq!(sys_nua, nua.c_ptr);
+        }
 
         let sys_handle = _nh; /* ignored */
 
         let handle: *mut Handle = _hmagic as *mut Handle;
         // let handle_struct: Option<&Handle>;
         if !handle.is_null() {
-            println!("++ OUTGOING SIP MESSAGE");
-            /* reply to a handle function (outgoing sip message) */
-            let handle_struct_temp: &Handle = unsafe { &*handle };
-            assert_eq!(sys_handle, handle_struct_temp.c_ptr);
+            /* reply to a owned handle function (outgoing sip message) */
+            let handle: &Handle = unsafe { &*handle };
+            assert_eq!(sys_handle, handle.c_ptr);
             // handle_struct = Some(handle_struct_temp);
-        } else {
-            if !sys_handle.is_null() {
-                /* incoming session (incoming sip message) */
-                println!("++ INCOMING SIP MESSAGE");
-                // handle_struct = None;
-            } else {
-                println!("++ EVENT WITHOUT SESSION");
-                /* no session, Nua stack other events */
-                // handle_struct = None;
-            }
         }
-
-        // dbg!(&event, nua_struct, nua, handle_struct, handle);
-
         Nua::_on_sys_nua_event(event, status, phrase, nua, handle);
     }) {
         // Code here must be panic-free.
