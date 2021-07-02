@@ -1,9 +1,12 @@
-use crate::result::Result;
 use crate::error::Error;
+use crate::nua::nua::Handle;
 use crate::nua::Nua;
+use crate::result::Result;
 use crate::sys;
+use crate::tag::Tag;
 
-pub type EventClosure = dyn Fn(&mut Nua, Event, u32, String) + 'static;
+pub type EventClosure =
+    dyn Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Vec<Tag>>) + 'static;
 
 /* Incomplete:
 perl -lane 'print if s/pub const (nua_event_e_(.*)): nua_event_e = (\d+);/$1,/'  $(find $PWD -name bindings.rs | head -n1)

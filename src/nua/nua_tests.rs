@@ -1,5 +1,6 @@
 use crate::nua::builder::Builder;
 use crate::nua::event::Event;
+use crate::nua::nua::Handle;
 use crate::nua::Nua;
 use crate::su;
 use crate::su::wrap;
@@ -149,8 +150,8 @@ fn create_two_nua_with_same_port() {
 // }
 
 #[test]
-#[ignore]
-// #[adorn(wrap)]
+// #[ignore]
+#[adorn(wrap)]
 #[serial]
 fn nua_send_message_to_itself() {
     /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
@@ -200,22 +201,29 @@ fn nua_send_message_to_itself() {
     };
     {
         // let my_message = my_message.clone();
-        nua.callback(|nua: &mut Nua, event: Event, status: u32, phrase: String| {
-            dbg!(&nua, &event, &status, &phrase);
-            let root: &su::Root = nua.root();
-            match event {
-                Event::ReplyShutdown => {
-                    root.break_();
+        nua.callback(
+            |nua: &mut Nua,
+             event: Event,
+             status: u32,
+             phrase: String,
+             handle: Option<&Handle>,
+             tags: Option<Vec<Tag>>| {
+                dbg!(&nua, &event, &status, &phrase);
+                let root: &su::Root = nua.root();
+                match event {
+                    Event::ReplyShutdown => {
+                        root.break_();
+                    }
+                    Event::IncomingMessage => {
+                        // dbg!(my_message);
+                    }
+                    Event::ReplyMessage => {
+                        // dbg!(my_message);
+                    }
+                    _ => {}
                 }
-                Event::IncomingMessage => {
-                    // dbg!(my_message);
-                }
-                Event::ReplyMessage => {
-                    // dbg!(my_message);
-                }
-                _ => {}
-            }
-        });
+            },
+        );
     }
 
     let handle = Builder::default()

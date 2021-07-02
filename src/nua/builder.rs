@@ -53,7 +53,12 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'static>(mut self, cb: F) -> Self {
+    pub fn callback<
+        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Vec<Tag>>) + 'static,
+    >(
+        mut self,
+        cb: F,
+    ) -> Self {
         self.closure = Some(Box::new(cb));
         self
     }

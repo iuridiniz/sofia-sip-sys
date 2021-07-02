@@ -7,11 +7,13 @@ pub use crate::nua::builder::Builder;
 pub use crate::nua::event::Event;
 pub use crate::nua::event::EventClosure;
 pub use crate::nua::handle::Handle;
+use crate::tag::Tag;
 
 pub struct Nua<'a> {
     pub(crate) root: Option<&'a su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
-    pub(crate) closure: Option<Box<dyn Fn(&mut Nua, Event, u32, String) + 'a>>,
+    pub(crate) closure:
+        Option<Box<dyn Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Vec<Tag>>) + 'a>>,
     shutdown_completed: bool,
 }
 
@@ -96,11 +98,14 @@ impl<'a> Nua<'a> {
         if let Some(cb) = &nua.closure {
             /* FIXME: not thread safe, we create a alias to a mutable Nua */
             let nua_for_closure = unsafe { &mut *nua_ptr };
-            cb(nua_for_closure, event, status, phrase);
+            cb(nua_for_closure, event, status, phrase, None, None);
         }
     }
 
-    pub fn callback<F: Fn(&mut Nua, Event, u32, String) + 'a>(&mut self, cb: F) {
+    pub fn callback<F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Vec<Tag>>) + 'a>(
+        &mut self,
+        cb: F,
+    ) {
         self.closure = Some(Box::new(cb));
     }
 
