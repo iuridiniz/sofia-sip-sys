@@ -149,7 +149,7 @@ pub fn init() -> Result<()> {
                 deinit()
             }
 
-            INITIALIZED.store(true, Ordering::Release);
+            INITIALIZED.store(true, Ordering::Relaxed);
             Ok(())
         }
     }
@@ -158,7 +158,7 @@ pub fn init() -> Result<()> {
 /// Returns `true` if SOFIA-SIP-SU has been initialized.
 #[inline]
 pub fn is_initialized() -> bool {
-    INITIALIZED.load(Ordering::Acquire)
+    INITIALIZED.load(Ordering::Relaxed)
 }
 
 pub fn deinit() {
@@ -168,9 +168,8 @@ pub fn deinit() {
     unsafe {
         sys::su_deinit();
     };
-    /* deinit default */
-    deinit_default_root();
-    INITIALIZED.store(false, Ordering::Release);
+
+    INITIALIZED.store(false, Ordering::Relaxed);
 }
 
 /*****************/
@@ -202,10 +201,11 @@ pub fn init_default_root() -> Result<()> {
             extern "C" fn _at_exit_destroy_root() {
                 deinit_default_root();
             }
+            assert!(unsafe { DEFAULT_ROOT.is_none() });
             unsafe { DEFAULT_ROOT = Some(root) };
             unsafe { sys::atexit(Some(_at_exit_destroy_root)) };
 
-            ROOT_INITIALIZED.store(true, Ordering::Release);
+            ROOT_INITIALIZED.store(true, Ordering::Relaxed);
             Ok(())
         }
     }
@@ -214,7 +214,7 @@ pub fn init_default_root() -> Result<()> {
 /// Returns `true` if default root has been initialized.
 #[inline]
 pub fn is_default_root_initialized() -> bool {
-    ROOT_INITIALIZED.load(Ordering::Acquire)
+    ROOT_INITIALIZED.load(Ordering::Relaxed)
 }
 
 fn get_default_root_as_mut() -> Result<&'static mut Root> {
@@ -229,12 +229,16 @@ pub fn get_default_root() -> Result<&'static Root> {
 }
 
 pub(crate) fn deinit_default_root() {
-    if !is_default_root_initialized() {
-        return;
+    match is_default_root_initialized() {
+        false => (),
+        true => {
+            get_default_root_as_mut().unwrap().destroy();
+            unsafe { DEFAULT_ROOT = None };
+            ROOT_INITIALIZED.store(false, Ordering::Relaxed);
+        }
     }
-    get_default_root_as_mut().unwrap().destroy();
-    unsafe { DEFAULT_ROOT = None };
-    ROOT_INITIALIZED.store(false, Ordering::Release);
+
+    assert!(unsafe { DEFAULT_ROOT.is_none() });
 }
 
 /*************/
@@ -252,64 +256,392 @@ pub fn main_loop_quit() {
     };
 }
 
+/***************/
+/* TEST HELPER */
+/***************/
+
+/* FIXME: Won't fix
+
+If an error occurs in any test using this library, it could affect all others
+following tests, since that this library need to be inited and deinit correctly.
+
+So, we have to deinit it correctly before prossed to next test.
+Fix this by doing a teardown per test (`wrap` does this)
+
+Also, each test run from a different thread by default (see --test-threads on
+`cargo test -- --help`) and need to be thread safe or do not use threads.
+Fix this by doing a setup/teardown that runs only once for all tests
+(`serial` can mitigate this)
+*/
+#[cfg(test)]
+pub(crate) fn wrap(f: fn()) {
+    /* manual deinit (tests do not run atexit) */
+    if let Err(e) = std::panic::catch_unwind(|| {
+        init().unwrap();
+        init_default_root().unwrap();
+        f();
+        deinit_default_root();
+        deinit();
+    }) {
+        deinit_default_root();
+        deinit();
+        panic!("{:?}", e);
+    }
+}
+
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
     use adorn::adorn;
     use serial_test::serial;
 
-    /* FIXME: Won't fix
+    mod su {
+        use super::*;
+        #[test]
+        #[serial]
+        fn su_init() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
 
-    If an error occurs in any test using this library, it could affect all others
-    following tests, since that this library need to be inited and deinit correctly.
+            init().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized is true after call init()"
+            );
 
-    So, we have to deinit it correctly before prossed to next test.
-    Fix this by doing a teardown per test (`wrap` does this)
-
-    Also, each test run from a different thread by default (see --test-threads on
-    `cargo test -- --help`) and need to be thread safe or do not use threads.
-    Fix this by doing a setup/teardown that runs only once for all tests
-    (`serial` can mitigate this)
-    */
-    pub fn wrap(f: fn()) {
-        /* manual deinit (tests do not run atexit) */
-        if let Err(e) = std::panic::catch_unwind(|| {
-            f();
             deinit();
-        }) {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false after call deinit()"
+            );
+        }
+
+        #[test]
+        #[serial]
+        fn su_deinit_without_init() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
+
             deinit();
-            panic!("{:?}", e);
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized remains false after call deinit()"
+            );
+        }
+
+        #[test]
+        #[serial]
+        fn su_init_duplicate_calls() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
+
+            init().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized is true after call init()"
+            );
+
+            init().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized remains true after call second call to init()"
+            );
+
+            deinit();
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false after call deinit()"
+            );
+
+            deinit();
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized reamins false after second call deinit()"
+            );
+        }
+
+        #[test]
+        #[serial]
+        fn su_init_deinit_many_times() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "FIRST INIT: assert is_initialized is false at very start"
+            );
+
+            init().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "FIRST INIT: assert is_initialized is true after call init()"
+            );
+
+            deinit();
+            assert_eq!(
+                is_initialized(),
+                false,
+                "FIRST INIT: assert is_initialized is false after call deinit()"
+            );
+
+            assert_eq!(
+                is_initialized(),
+                false,
+                "SECOND INIT: assert is_initialized is false at second start"
+            );
+
+            init().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "SECOND INIT: assert is_initialized is true after call init()"
+            );
+
+            deinit();
+            assert_eq!(
+                is_initialized(),
+                false,
+                "SECOND INIT: assert is_initialized is false after call deinit()"
+            );
+        }
+
+        #[test]
+        #[serial]
+        fn su_init_full() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false at very start"
+            );
+
+            /* su_init() */
+            init().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized is true after call init()"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false after call init()"
+            );
+
+            /* init_default_root() */
+            init_default_root().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized remains true after call init_default_root()"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                true,
+                "assert is_default_root_initialized is true after call init_default_root()"
+            );
+
+            /* deinit_default_root() */
+            deinit_default_root();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized remains true after call deinit_default_root()"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false after call deinit_default_root()"
+            );
+
+            /* deinit() */
+            deinit();
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false after call deinit()"
+            );
+
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized remains false after call deinit()"
+            );
+        }
+
+        #[test]
+        #[serial]
+        fn su_init_default_root() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false at very start"
+            );
+
+            /* init_default_root() */
+            init_default_root().unwrap();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized remains true after call init_default_root()"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                true,
+                "assert is_default_root_initialized is true after call init_default_root()"
+            );
+
+            /* deinit_default_root() */
+            deinit_default_root();
+            assert_eq!(
+                is_initialized(),
+                true,
+                "assert is_initialized remains true after call deinit_default_root()"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false after call deinit_default_root()"
+            );
+
+            /* manual deinit */
+            deinit();
+        }
+
+        #[test]
+        #[serial]
+        fn su_deinit_default_root_without_init() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false at very start"
+            );
+
+            /* deinit_default_root() */
+            deinit_default_root();
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized remains false after call deinit_default_root()"
+            );
+            assert_eq!(
+            is_default_root_initialized(),
+            false,
+            "assert is_default_root_initialized reamains false after call deinit_default_root()"
+        );
+        }
+
+        #[test]
+        #[serial]
+        fn test_wrap_helper() {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false at very start"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized is false at very start"
+            );
+            wrap(|| {
+                assert_eq!(
+                    is_initialized(),
+                    true,
+                    "assert is_initialized is true inside wrapped fn"
+                );
+                assert_eq!(
+                    is_default_root_initialized(),
+                    true,
+                    "assert is_default_root_initialized is true inside wrapped fn"
+                );
+            });
+
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false after wrap run without panic"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized after wrap run without panic"
+            );
         }
     }
 
     #[test]
     #[serial]
-    #[adorn(wrap)]
-    fn su_init() {
-        assert_eq!(is_initialized(), false);
-        init().unwrap();
-        assert_eq!(is_initialized(), true);
+    fn test_wrap_helper_that_panics() {
+        assert_eq!(
+            is_initialized(),
+            false,
+            "assert is_initialized is false at very start"
+        );
+        assert_eq!(
+            is_default_root_initialized(),
+            false,
+            "assert is_default_root_initialized is false at very start"
+        );
+        if let Err(_) = std::panic::catch_unwind(|| {
+            wrap(|| {
+                panic!("Just panic!");
+            });
+        }) {
+            assert_eq!(
+                is_initialized(),
+                false,
+                "assert is_initialized is false after wrap run and panics"
+            );
+            assert_eq!(
+                is_default_root_initialized(),
+                false,
+                "assert is_default_root_initialized after wrap run and panics"
+            );
+        } else {
+            assert!(false, "The wrapped function must panic")
+        };
     }
 
     #[test]
-    #[serial]
     #[adorn(wrap)]
-    fn su_init_default_root() {
-        assert_eq!(is_default_root_initialized(), false);
-        init_default_root().unwrap();
-        assert_eq!(is_default_root_initialized(), true);
-    }
-
-    #[test]
     #[serial]
-    #[adorn(wrap)]
     fn create_root() {
         Root::new().unwrap();
     }
 
     #[test]
-    #[serial]
     #[adorn(wrap)]
+    #[serial]
     fn step_must_return_negative_meaning_no_steps_to_run() {
         let root = Root::new().unwrap();
         assert_eq!(root.step(Some(1)), -1);
