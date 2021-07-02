@@ -18,7 +18,7 @@ sofia-sip = "*"
 Sofia-SIP Rust bindings tries to mimic almost as possible the API of Sofia-SIP C library. You can start by learning the concepts of [Sofia SIP User Agent Library - "nua" - High-Level User Agent Module
 ](http://sofia-sip.sourceforge.net/refdocs/nua/).
 
-After this intro, please read [the tests from Nua module](https://github.com/iuridiniz/sofia-sip-sys/blob/main/src/nua/nua.rs).
+After this intro, please read [the tests from Nua module](https://github.com/iuridiniz/sofia-sip-sys/blob/main/src/nua/nua_tests.rs).
 
 ## Acknowledgements
 
