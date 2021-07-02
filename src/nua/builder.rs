@@ -54,7 +54,7 @@ impl<'a> Builder<'a> {
     }
 
     pub fn callback<
-        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Vec<Tag>>) + 'static,
+        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<&()>, Option<Vec<Tag>>) + 'static,
     >(
         mut self,
         cb: F,
