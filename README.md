@@ -21,6 +21,8 @@ After this intro, please read [the tests from Nua module](https://github.com/iur
 
 ### Sofia-SIP C docs
 
+[Sofia SIP User Agent Library - sofia-sip-ua](http://sofia-sip.sourceforge.net/refdocs/index.html)
+
 Common runtime library:
 - [Sofia SIP User Agent Library - "su" - OS Services and Utilities](http://sofia-sip.sourceforge.net/refdocs/su/index.html).
 - [Sofia SIP User Agent Library - "sresolv" - Asynchronous DNS Resolver](http://sofia-sip.sourceforge.net/refdocs/sresolv/index.html).
