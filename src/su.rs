@@ -285,11 +285,11 @@ pub(crate) fn wrap(f: fn()) {
     }) {
         deinit_default_root();
         deinit();
-        print!(
+        println!(
             "******************************************************\n\
              PANIC INSIDE WRAPPER\n\
-             Remove `#[adorn(wrap)]` to get real line that panicked\n\
-             *********************************(((******************\n"
+             `#[adorn(wrap)]` may give a wrong line that panicked\n\
+             ******************************************************\n"
         );
         std::panic::resume_unwind(e);
     }
