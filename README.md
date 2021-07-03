@@ -15,10 +15,39 @@ sofia-sip = "*"
 
 ## Documentation
 
-Sofia-SIP Rust bindings tries to mimic almost as possible the API of Sofia-SIP C library. You can start by learning the concepts of [Sofia SIP User Agent Library - "nua" - High-Level User Agent Module
-](http://sofia-sip.sourceforge.net/refdocs/nua/).
+Sofia-SIP Rust bindings tries to mimic almost as possible the API of Sofia-SIP C library. You can start by learning the concepts of [Sofia SIP User Agent Library - "nua" - High-Level User Agent Module](http://sofia-sip.sourceforge.net/refdocs/nua/).
 
 After this intro, please read [the tests from Nua module](https://github.com/iuridiniz/sofia-sip-sys/blob/main/src/nua/nua_tests.rs).
+
+### Sofia-SIP C docs
+
+Common runtime library:
+- [Sofia SIP User Agent Library - "su" - OS Services and Utilities](http://sofia-sip.sourceforge.net/refdocs/su/index.html).
+- [Sofia SIP User Agent Library - "sresolv" - Asynchronous DNS Resolver](http://sofia-sip.sourceforge.net/refdocs/sresolv/index.html).
+- [Sofia SIP User Agent Library - "ipt" - Utility Module](http://sofia-sip.sourceforge.net/refdocs/ipt/index.html).
+
+SIP Signaling:
+- [Sofia SIP User Agent Library - "nua" - High-Level User Agent Module](http://sofia-sip.sourceforge.net/refdocs/nua/).
+- [Sofia SIP User Agent Library - "nea" - SIP Events Module](http://sofia-sip.sourceforge.net/refdocs/nea/index.html).
+- [Sofia SIP User Agent Library - "iptsec" - Authentication Module](http://sofia-sip.sourceforge.net/refdocs/iptsec/index.html).
+- [Sofia SIP User Agent Library - "nta" - SIP Transactions Module](http://sofia-sip.sourceforge.net/refdocs/nta/index.html).
+- [Sofia SIP User Agent Library - "tport" - Transport Module](http://sofia-sip.sourceforge.net/refdocs/tport/index.html).
+- [Sofia SIP User Agent Library - "sip" - SIP Parser Module](http://sofia-sip.sourceforge.net/refdocs/sip/index.html).
+- [Sofia SIP User Agent Library - "msg" - Message Parser Module](http://sofia-sip.sourceforge.net/refdocs/msg/index.html).
+- [Sofia SIP User Agent Library - "url" - URL Module](http://sofia-sip.sourceforge.net/refdocs/url/index.html).
+- [Sofia SIP User Agent Library - "bnf" - String Parser Module](http://sofia-sip.sourceforge.net/refdocs/bnf/index.html).
+
+HTTP subsystem:
+- [Sofia SIP User Agent Library - "nth" - HTTP Transactions Module](http://sofia-sip.sourceforge.net/refdocs/nth/index.html).
+- [Sofia SIP User Agent Library - "http" - HTTP Parser Module](http://sofia-sip.sourceforge.net/refdocs/http/index.html).
+
+SDP processing:
+- [Sofia SIP User Agent Library - "soa" - SDP Offer/Answer Engine Module](http://sofia-sip.sourceforge.net/refdocs/soa/index.html).
+- [Sofia SIP User Agent Library - "sdp" - SDP Module](http://sofia-sip.sourceforge.net/refdocs/sdp/index.html).
+
+Other:
+- [Sofia SIP User Agent Library - "features" Module](http://sofia-sip.sourceforge.net/refdocs/features/index.html).
+- [Sofia SIP User Agent Library - "stun" - STUN Client and Server Module](http://sofia-sip.sourceforge.net/refdocs/stun/index.html).
 
 ## Acknowledgements
 
