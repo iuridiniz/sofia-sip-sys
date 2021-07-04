@@ -69,7 +69,9 @@ fn main() {
         .allowlist_var("siptag_to_str")
         /* sip.h */
         .allowlist_type("sip_t")
-        /*msg_types.h */
+        /* url.h */
+        .allowlist_function("url_e")
+        /* msg_types.h */
         // .opaque_type("msg_pub_t")
         .opaque_type("msg_hclass_t") /* struct with bit fields (auto-generated tests fails on this kind of struct) */
         /* nua tags */

@@ -32,3 +32,8 @@
 //     siptag_payload_str, tag_str_v("Hello hellO!\n"),
 //     (tag_type_t)0, (tag_value_t)0
 // SU_WAIT_FOREVER;
+
+//URL_PRINT_FORMAT;
+//URL_PRINT_ARGS(u);
+//"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s";
+// (u)->url_scheme ? (u)->url_scheme : "", (u)->url_type != url_any && (u)->url_scheme && (u)->url_scheme[0] ? ":" : "", (u)->url_root && ((u)->url_host || (u)->url_user) ? "//" : "", (u)->url_user ? (u)->url_user : "", (u)->url_user && (u)->url_password ? ":" : "", (u)->url_user && (u)->url_password ? (u)->url_password : "", (u)->url_user && (u)->url_host ? "@" : "", (u)->url_host ? (u)->url_host : "", (u)->url_host && (u)->url_port ? ":" : "", (u)->url_host && (u)->url_port ? (u)->url_port : "", (u)->url_root && (u)->url_path ? "/" : "", (u)->url_path ? (u)->url_path : "", (u)->url_params ? ";" : "", (u)->url_params ? (u)->url_params : "", (u)->url_headers ? "?" : "", (u)->url_headers ? (u)->url_headers : "", (u)->url_fragment ? "#" : "", (u)->url_fragment ? (u)->url_fragment : "";

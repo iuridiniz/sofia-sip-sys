@@ -177,10 +177,10 @@ extern "C" fn nua_callback_glue(
         // let c_string = unsafe { std::ffi::CString::from_raw(buf) };
         // dbg!(&c_string);
         // /* avoid double free, by consuming c_string without dealloc */
-        // c_string.into_raw();
+        // c_string.into_raw(); // mem::forget(c_string)
         // }
 
-        let sip = Sip::_from_sip_t(_sip);
+        let sip = Sip::_from_sys(_sip);
 
         // println!("------ [nua_callback_glue] ------");
         Nua::_on_sys_nua_event(event, status, phrase, nua, handle, sip, tags);

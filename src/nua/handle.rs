@@ -1,8 +1,8 @@
 use crate::error::Error;
-use crate::result::Result;
-use crate::nua::Nua;
-use crate::sys;
 use crate::nua::builder::convert_tags;
+use crate::nua::Nua;
+use crate::result::Result;
+use crate::sys;
 use crate::tag::Tag;
 
 #[derive(Debug)]
@@ -24,7 +24,6 @@ impl<'a> Handle<'a> {
         magic: *mut sys::nua_hmagic_t,
         tags: Option<&[sys::tagi_t]>,
     ) -> Result<*mut sys::nua_handle_t> {
-
         let tag_name: *const sys::tag_type_s;
         let tag_value: isize;
 
@@ -46,7 +45,7 @@ impl<'a> Handle<'a> {
             tag_value = tags.unwrap().as_ptr() as isize;
         }
 
-        let handle_sys = unsafe { sys::nua_handle(nua,  magic, tag_name, tag_value) };
+        let handle_sys = unsafe { sys::nua_handle(nua, magic, tag_name, tag_value) };
         if handle_sys.is_null() {
             /* failed to create */
             return Err(Error::CreateNuaHandleError);
@@ -54,10 +53,7 @@ impl<'a> Handle<'a> {
         Ok(handle_sys)
     }
 
-    pub(crate) fn _message(
-        nh: *mut sys::nua_handle_t,
-        tags: Option<&[sys::tagi_t]>
-    ) {
+    pub(crate) fn _message(nh: *mut sys::nua_handle_t, tags: Option<&[sys::tagi_t]>) {
         let tag_name: *const sys::tag_type_s;
         let tag_value: isize;
 
@@ -77,12 +73,11 @@ impl<'a> Handle<'a> {
         unsafe { sys::nua_message(nh, tag_name, tag_value) };
     }
 
-    pub fn message(&self, tags: Vec::<Tag>) {
+    pub fn message(&self, tags: Vec<Tag>) {
         let tags = convert_tags(&tags);
         let sys_tags = tags.as_slice();
 
         let nh = self.c_ptr;
         Self::_message(nh, Some(sys_tags))
     }
-
 }

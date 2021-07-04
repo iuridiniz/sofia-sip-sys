@@ -217,7 +217,11 @@ fn nua_send_message_to_itself() {
                         root.break_();
                     }
                     Event::IncomingMessage => {
-                        // dbg!(my_message);
+                        dbg!(&sip);
+                        println!("Received MESSAGE: {} {}", status, &phrase);
+                        println!("From: {}", sip.from());
+                        println!("To: {}", sip.to());
+                        println!("Subject: {}", sip.subject())
                     }
                     Event::ReplyMessage => {
                         // dbg!(my_message);
@@ -249,7 +253,7 @@ fn nua_send_message_to_itself() {
     // root.sleep(1000);
     // root.sleep(1000);
 
-    // panic!("*********************** ABORTED ***********************");
+    panic!("*********************** ABORTED ***********************");
 }
 
 // #[test]
