@@ -190,7 +190,6 @@ fn nua_send_message_to_itself() {
     |------------------->[_]
     |                     |
     */
-    
     let my_message = "Hi\n";
     let root = su::Root::new().unwrap();
     let url = std::rc::Rc::new("sip:127.0.0.1:9997");
@@ -245,7 +244,10 @@ fn nua_send_message_to_itself() {
 
     handle.message(tags);
     root.sleep(1000);
-    panic!("*********************** ABORTED ***********************");
+    // root.sleep(1000);
+    // root.sleep(1000);
+
+    // panic!("*********************** ABORTED ***********************");
 }
 
 // #[test]

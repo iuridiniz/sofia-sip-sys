@@ -7,6 +7,7 @@ pub use crate::nua::builder::Builder;
 pub use crate::nua::event::Event;
 pub use crate::nua::event::EventClosure;
 pub use crate::nua::handle::Handle;
+use crate::sip::Sip;
 use crate::tag::Tag;
 
 pub struct Nua<'a> {
@@ -14,7 +15,7 @@ pub struct Nua<'a> {
     pub(crate) c_ptr: *mut sys::nua_t,
     pub(crate) closure: Option<
         Box<
-            dyn Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<&()>, Option<Vec<Tag>>)
+            dyn Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Sip>, Option<Vec<Tag>>)
                 + 'a,
         >,
     >,
@@ -92,6 +93,8 @@ impl<'a> Nua<'a> {
         phrase: String,
         nua_ptr: *mut Nua,
         _handle_ptr: *mut Handle,
+        sip: Sip,
+        tags: Vec<Tag>,
     ) {
         assert!(!nua_ptr.is_null());
         let nua = unsafe { &mut *nua_ptr };
@@ -107,7 +110,7 @@ impl<'a> Nua<'a> {
     }
 
     pub fn callback<
-        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<&()>, Option<Vec<Tag>>) + 'a,
+        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Sip>, Option<Vec<Tag>>) + 'a,
     >(
         &mut self,
         cb: F,

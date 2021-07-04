@@ -4,6 +4,7 @@ use crate::nua::event::EventClosure;
 use crate::nua::handle::Handle;
 use crate::nua::Nua;
 use crate::result::Result;
+use crate::sip::Sip;
 use crate::su;
 use crate::sys;
 use crate::tag::Tag;
@@ -39,6 +40,7 @@ pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec<sys::tagi_t> {
     sys_tags
 }
 
+/* transform this in tag builder, move create to each struct */
 impl<'a> Builder<'a> {
     pub fn default() -> Self {
         Builder {
@@ -54,7 +56,7 @@ impl<'a> Builder<'a> {
     }
 
     pub fn callback<
-        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<&()>, Option<Vec<Tag>>) + 'static,
+        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Sip>, Option<Vec<Tag>>) + 'static,
     >(
         mut self,
         cb: F,
@@ -110,6 +112,7 @@ impl<'a> Builder<'a> {
     }
 }
 
+/// Called from C code, it will convert C types to Rust types and call Rust function with these types
 extern "C" fn nua_callback_glue(
     _event: sys::nua_event_t,
     _status: ::std::os::raw::c_int,
@@ -160,8 +163,27 @@ extern "C" fn nua_callback_glue(
             assert_eq!(sys_handle, handle.c_ptr);
             // handle_struct = Some(handle_struct_temp);
         }
+
+        let tags = Vec::<Tag>::new();
+
+        // if !_tags.is_null() {
+        // loop {
+        // let t = unsafe { *_tags.offset(0) };
+        // }
+        // dbg!(t);
+        // let mut v = Vec::<i8>::with_capacity(100);
+        // let buf = v.as_mut_ptr();
+        // unsafe { sys::t_snprintf(_tags.offset(0), buf, 100) };
+        // let c_string = unsafe { std::ffi::CString::from_raw(buf) };
+        // dbg!(&c_string);
+        // /* avoid double free, by consuming c_string without dealloc */
+        // c_string.into_raw();
+        // }
+
+        let sip = Sip::_from_sip_t(_sip);
+
         // println!("------ [nua_callback_glue] ------");
-        Nua::_on_sys_nua_event(event, status, phrase, nua, handle);
+        Nua::_on_sys_nua_event(event, status, phrase, nua, handle, sip, tags);
     }) {
         // Code here must be panic-free.
         eprintln!("PANIC!! while calling a callback from C: {:?}", e);
