@@ -4,6 +4,7 @@ use crate::nua::nua::Handle;
 use crate::nua::Nua;
 use crate::su;
 use crate::su::wrap;
+use crate::Sip;
 use crate::Tag;
 
 use adorn::adorn;
@@ -206,9 +207,10 @@ fn nua_send_message_to_itself() {
              status: u32,
              phrase: String,
              handle: Option<&Handle>,
-             sip: Option<_>,
-             tags: Option<Vec<Tag>>| {
-                dbg!(&nua, &event, &status, &phrase);
+             sip: Sip,
+             tags: Vec<Tag>| {
+                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+                // dbg!(&event);
                 let root: &su::Root = nua.root();
                 match event {
                     Event::ReplyShutdown => {

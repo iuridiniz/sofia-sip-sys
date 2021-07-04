@@ -13,12 +13,8 @@ use crate::tag::Tag;
 pub struct Nua<'a> {
     pub(crate) root: Option<&'a su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
-    pub(crate) closure: Option<
-        Box<
-            dyn Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Sip>, Option<Vec<Tag>>)
-                + 'a,
-        >,
-    >,
+    pub(crate) closure:
+        Option<Box<dyn Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'a>>,
     shutdown_completed: bool,
 }
 
@@ -105,13 +101,11 @@ impl<'a> Nua<'a> {
         if let Some(cb) = &nua.closure {
             /* FIXME: not thread safe, we create a alias to a mutable Nua */
             let nua_for_closure = unsafe { &mut *nua_ptr };
-            cb(nua_for_closure, event, status, phrase, None, None, None);
+            cb(nua_for_closure, event, status, phrase, None, sip, tags);
         }
     }
 
-    pub fn callback<
-        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Sip>, Option<Vec<Tag>>) + 'a,
-    >(
+    pub fn callback<F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'a>(
         &mut self,
         cb: F,
     ) {

@@ -56,7 +56,7 @@ impl<'a> Builder<'a> {
     }
 
     pub fn callback<
-        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Option<Sip>, Option<Vec<Tag>>) + 'static,
+        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'static,
     >(
         mut self,
         cb: F,
