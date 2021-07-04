@@ -5,6 +5,8 @@ use std::fmt;
 
 use std::ffi::CStr;
 
+type SipSubject = MsgGeneric;
+
 #[derive(Default, Debug)]
 pub struct MsgGeneric {
     exists: bool,
@@ -17,7 +19,16 @@ impl MsgGeneric {
         if sys_msg.is_null() {
             return msg;
         }
+        let sys_msg = unsafe { *sys_msg };
+
         msg.exists = true;
+
+        assert!(!sys_msg.g_string.is_null());
+        msg.string = unsafe {
+            CStr::from_ptr(sys_msg.g_string)
+                .to_string_lossy()
+                .into_owned()
+        };
 
         msg
     }
@@ -45,34 +56,16 @@ pub struct SipAddr {
 
 /// Convert an url to a String.
 fn url_as_string(sys_url_ptr: *const sys::url_t) -> String {
-    // dbg!(unsafe { *sys_url_ptr });
+    assert!(!sys_url_ptr.is_null());
 
+    /* first read length of c string */
     let len = unsafe { sys::url_e(std::ptr::null_mut(), 0, sys_url_ptr) as usize };
 
-    // dbg!(len);
-
-    let mut buf: Vec<u8> = vec![0; len + 1];
-    // buf.shrink_to_fit();
-    // assert!(buf.len() == buf.capacity());
-    // assert_eq!(buf.capacity(), len);
-
-    unsafe { sys::url_e(buf.as_mut_ptr() as *mut i8, len as i32 + 1, sys_url_ptr) };
-    // dbg!(size);
-    // dbg!(&buf);
+    /* create a buf to store c string plus '\0' */
+    let buf_len = len + 1;
+    let mut buf: Vec<u8> = vec![0; buf_len];
+    unsafe { sys::url_e(buf.as_mut_ptr() as *mut i8, buf_len as i32, sys_url_ptr) };
     String::from_utf8_lossy(&buf[..len]).to_string()
-    // dbg!(s);
-    // String::from("")
-
-    /* this works */
-    // const len: usize = 20;
-
-    // let mut buf: [u8; len] = [0; len];
-
-    // let s = unsafe { sys::url_e(buf.as_mut_ptr() as *mut i8, len as i32, sys_url_ptr) };
-    // dbg!(s);
-    // let s = String::from_utf8_lossy(&buf).to_string();
-    // dbg!(&s);
-    // s
 }
 
 impl SipAddr {
@@ -91,12 +84,7 @@ impl SipAddr {
             };
         }
 
-        // dbg!(&sys_addr.a_url.as_ptr());
-        // dbg!(&sys_addr.a_url);
-
         let sys_url_ptr: *const sys::url_t = &sys_addr.a_url[0];
-
-        // dbg!(unsafe { *sys_url_ptr });
 
         addr.url = url_as_string(sys_url_ptr);
 
@@ -136,7 +124,7 @@ pub struct Sip {
     exists: bool,
     from: SipAddr,
     to: SipAddr,
-    subject: MsgGeneric,
+    subject: SipSubject,
 }
 impl Sip {
     pub(crate) fn _from_sys(sys_sip: *const sys::sip_t) -> Self {
@@ -149,6 +137,8 @@ impl Sip {
 
         sip.from = SipAddr::_from_sys(sys_sip.sip_from);
         sip.to = SipAddr::_from_sys(sys_sip.sip_to);
+
+        sip.subject = SipSubject::_from_sys(sys_sip.sip_subject);
 
         sip.exists = true;
         sip
