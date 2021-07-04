@@ -221,7 +221,8 @@ fn nua_send_message_to_itself() {
                         println!("Received MESSAGE: {} {}", status, &phrase);
                         println!("From: {}", sip.from());
                         println!("To: {}", sip.to());
-                        println!("Subject: {}", sip.subject())
+                        println!("Subject: {}", sip.subject());
+                        println!("ContentType: {}", sip.content_type());
                     }
                     Event::ReplyMessage => {
                         // dbg!(my_message);

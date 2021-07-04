@@ -6,7 +6,55 @@ use std::fmt;
 use std::ffi::CStr;
 
 type SipSubject = MsgGeneric;
+type SipContentType = MsgContentType;
 
+#[derive(Default, Debug)]
+pub struct MsgContentType {
+    exists: bool,
+    r#type: String,
+    subtype: String,
+}
+
+impl MsgContentType {
+    pub(crate) fn _from_sys(sys_msg: *const sys::msg_content_type_s) -> Self {
+        let mut msg = Self::default();
+        if sys_msg.is_null() {
+            return msg;
+        }
+        let sys_msg = unsafe { *sys_msg };
+
+        msg.exists = true;
+
+        assert!(!sys_msg.c_type.is_null());
+        msg.r#type = unsafe {
+            CStr::from_ptr(sys_msg.c_type)
+                .to_string_lossy()
+                .into_owned()
+        };
+        assert!(!sys_msg.c_subtype.is_null());
+        msg.r#subtype = unsafe {
+            CStr::from_ptr(sys_msg.c_subtype)
+                .to_string_lossy()
+                .into_owned()
+        };
+        msg
+    }
+}
+
+impl fmt::Display for MsgContentType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s: String = self.into();
+        write!(f, "{}", s)
+    }
+}
+
+impl Into<String> for &MsgContentType {
+    fn into(self) -> String {
+        format!("{}", self.r#type)
+    }
+}
+
+/******************/
 #[derive(Default, Debug)]
 pub struct MsgGeneric {
     exists: bool,
@@ -15,7 +63,7 @@ pub struct MsgGeneric {
 
 impl MsgGeneric {
     pub(crate) fn _from_sys(sys_msg: *const sys::msg_generic_t) -> Self {
-        let mut msg = MsgGeneric::default();
+        let mut msg = Self::default();
         if sys_msg.is_null() {
             return msg;
         }
@@ -70,7 +118,7 @@ fn url_as_string(sys_url_ptr: *const sys::url_t) -> String {
 
 impl SipAddr {
     pub(crate) fn _from_sys(sys_addr: *const sys::sip_addr_s) -> Self {
-        let mut addr = SipAddr::default();
+        let mut addr = Self::default();
         if sys_addr.is_null() {
             return addr;
         }
@@ -125,10 +173,11 @@ pub struct Sip {
     from: SipAddr,
     to: SipAddr,
     subject: SipSubject,
+    content_type: SipContentType,
 }
 impl Sip {
     pub(crate) fn _from_sys(sys_sip: *const sys::sip_t) -> Self {
-        let mut sip = Sip::default();
+        let mut sip = Self::default();
         if sys_sip.is_null() {
             return sip;
         }
@@ -139,6 +188,8 @@ impl Sip {
         sip.to = SipAddr::_from_sys(sys_sip.sip_to);
 
         sip.subject = SipSubject::_from_sys(sys_sip.sip_subject);
+
+        sip.content_type = SipContentType::_from_sys(sys_sip.sip_content_type);
 
         sip.exists = true;
         sip
@@ -152,7 +203,11 @@ impl Sip {
         &self.to
     }
 
-    pub fn subject(&self) -> &MsgGeneric {
+    pub fn subject(&self) -> &SipSubject {
         &self.subject
+    }
+
+    pub fn content_type(&self) -> &SipContentType {
+        &self.content_type
     }
 }
