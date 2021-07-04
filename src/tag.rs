@@ -28,12 +28,11 @@ impl Tag {
     }
     pub(crate) fn value(&self) -> sys::tag_value_t {
         match self {
-            Tag::_NuUrl(cstring) |
-            Tag::_SipSubjectStr(cstring) |
-            Tag::_SipContentTypeStr(cstring) |
-            Tag::_SipPayloadStr(cstring) |
-            Tag::_SipToStr(cstring)
-                => cstring.as_ptr() as sys::tag_value_t,
+            Tag::_NuUrl(cstring)
+            | Tag::_SipSubjectStr(cstring)
+            | Tag::_SipContentTypeStr(cstring)
+            | Tag::_SipPayloadStr(cstring)
+            | Tag::_SipToStr(cstring) => cstring.as_ptr() as sys::tag_value_t,
             Tag::Null | Tag::End => 0 as sys::tag_value_t,
         }
     }
@@ -61,7 +60,7 @@ impl Tag {
     }
 
     #[allow(non_snake_case)]
-    pub fn SipPayload(s: &str) -> Result<Self> {
+    pub fn SipPayloadString(s: &str) -> Result<Self> {
         Ok(Tag::_SipPayloadStr(CString::new(s)?))
     }
 

@@ -209,7 +209,7 @@ fn nua_send_message_to_itself() {
              handle: Option<&Handle>,
              sip: Sip,
              tags: Vec<Tag>| {
-                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+                dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
                 // dbg!(&event);
                 let root: &su::Root = nua.root();
                 match event {
@@ -217,12 +217,13 @@ fn nua_send_message_to_itself() {
                         root.break_();
                     }
                     Event::IncomingMessage => {
-                        dbg!(&sip);
                         println!("Received MESSAGE: {} {}", status, &phrase);
                         println!("From: {}", sip.from());
                         println!("To: {}", sip.to());
                         println!("Subject: {}", sip.subject());
                         println!("ContentType: {}", sip.content_type());
+                        println!("Payload: {:?}", sip.payload().as_utf8_lossy());
+                        assert_eq!(sip.payload().as_utf8_lossy(), my_message);
                     }
                     Event::ReplyMessage => {
                         // dbg!(my_message);
@@ -246,13 +247,11 @@ fn nua_send_message_to_itself() {
         .tag(Tag::SipTo(&url.clone()).unwrap())
         .tag(Tag::NuUrl(&url.clone()).unwrap())
         .tag(Tag::SipContentType("text/plain").unwrap())
-        .tag(Tag::SipPayload(my_message).unwrap())
+        .tag(Tag::SipPayloadString(my_message).unwrap())
         .create_tags();
 
     handle.message(tags);
     root.sleep(1000);
-    // root.sleep(1000);
-    // root.sleep(1000);
 
     panic!("*********************** ABORTED ***********************");
 }
