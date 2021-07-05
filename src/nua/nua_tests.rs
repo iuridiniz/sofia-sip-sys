@@ -14,21 +14,81 @@ use serial_test::serial;
 #[adorn(wrap)]
 #[serial]
 fn create_nua_with_default_root() {
-    let b = TagBuilder::default();
+    let tags = TagBuilder::default().collect();
 
-    b.create().unwrap();
+    Nua::create(tags).unwrap();
 }
 
 #[test]
 #[adorn(wrap)]
 #[serial]
 fn create_nua_with_custom_root() {
+    let tags = TagBuilder::default().collect();
     let root = Root::new().unwrap();
 
-    let b = TagBuilder::default();
-    let b = b.root(&root);
+    Nua::create_with_root(&root, tags).unwrap();
+}
 
-    b.create().unwrap();
+#[test]
+#[adorn(wrap)]
+#[serial]
+fn nua_set_callback_to_closure() {
+    let tags = TagBuilder::default().collect();
+    let mut nua = Nua::create(tags).unwrap();
+    nua.callback(
+        |nua: &mut Nua,
+         event: NuaEvent,
+         status: u32,
+         phrase: String,
+         handle: Option<&Handle>,
+         sip: Sip,
+         tags: Vec<Tag>| {
+            dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+        },
+    )
+}
+
+#[test]
+#[adorn(wrap)]
+#[serial]
+fn nua_set_callback_to_fn() {
+    fn cb(
+        nua: &mut Nua,
+        event: NuaEvent,
+        status: u32,
+        phrase: String,
+        handle: Option<&Handle>,
+        sip: Sip,
+        tags: Vec<Tag>,
+    ) {
+        dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+    }
+
+    let tags = TagBuilder::default().collect();
+    let mut nua = Nua::create(tags).unwrap();
+    nua.callback(cb);
+}
+
+#[test]
+#[adorn(wrap)]
+#[serial]
+fn create_nua_full() {
+    fn cb(
+        nua: &mut Nua,
+        event: NuaEvent,
+        status: u32,
+        phrase: String,
+        handle: Option<&Handle>,
+        sip: Sip,
+        tags: Vec<Tag>,
+    ) {
+        dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+    }
+
+    let tags = TagBuilder::default().collect();
+    let root = Root::new().unwrap();
+
+    let mut nua = Nua::create_full(&root, cb, tags).unwrap();
 }
 
 #[test]
@@ -39,15 +99,13 @@ fn create_nua_with_custom_url() {
 
     let root = Root::new().unwrap();
 
-    let b = TagBuilder::default();
-    let b = b.root(&root);
-    let b = b.tag(url);
+    let tags = TagBuilder::default().tag(url).collect();
 
-    b.create().unwrap();
+    Nua::create(tags).unwrap();
 }
 
 #[test]
-#[adorn(wrap)]
+// #[adorn(wrap)]
 #[serial]
 fn create_two_nua_with_same_port() {
     let url = Tag::NuUrl("sip:*:5080").unwrap();
@@ -55,20 +113,20 @@ fn create_two_nua_with_same_port() {
     let root = Root::new().unwrap();
 
     let b = TagBuilder::default();
-    let b = b.root(&root);
     let b = b.tag(url);
+    let tags = b.collect();
 
-    let _nua_a = b.create().unwrap();
+    let _nua_a = Nua::create_with_root(&root, tags).unwrap();
 
     let url = Tag::NuUrl("sip:*:5080").unwrap();
 
     let root = Root::new().unwrap();
 
     let b = TagBuilder::default();
-    let b = b.root(&root);
     let b = b.tag(url);
+    let tags = b.collect();
 
-    assert!(b.create().is_err());
+    assert!(Nua::create_with_root(&root, tags).is_err());
 }
 
 // #[test]
@@ -197,8 +255,10 @@ fn nua_send_message_to_itself() {
 
     let mut nua = {
         let url = Tag::NuUrl(&url.clone()).unwrap();
-        TagBuilder::default().root(&root).tag(url).create().unwrap()
+        let tags = TagBuilder::default().tag(url).collect();
+        Nua::create_with_root(&root, tags).unwrap()
     };
+
     {
         // let my_message = my_message.clone();
         nua.callback(
@@ -234,13 +294,13 @@ fn nua_send_message_to_itself() {
         );
     }
 
-    let handle = TagBuilder::default()
-        .tag(Tag::SipTo(&url.clone()).unwrap())
-        .tag(Tag::NuUrl(&url.clone()).unwrap())
-        .create_handle(&nua)
-        .unwrap();
-
-    // dbg!(&handle);
+    let handle = {
+        let tags = TagBuilder::default()
+            .tag(Tag::SipTo(&url.clone()).unwrap())
+            .tag(Tag::NuUrl(&url.clone()).unwrap())
+            .collect();
+        Handle::create(&nua, tags).unwrap()
+    };
 
     let tags = TagBuilder::default()
         .tag(Tag::SipSubject("NUA").unwrap())
@@ -248,10 +308,10 @@ fn nua_send_message_to_itself() {
         .tag(Tag::NuUrl(&url.clone()).unwrap())
         .tag(Tag::SipContentType("text/plain").unwrap())
         .tag(Tag::SipPayloadString(my_message).unwrap())
-        .create_tags();
+        .collect();
 
     handle.message(tags);
     root.sleep(1000);
 
-    panic!("*********************** ABORTED ***********************");
+    // panic!("*********************** ABORTED ***********************");
 }

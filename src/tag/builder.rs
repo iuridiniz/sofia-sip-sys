@@ -12,20 +12,9 @@ use crate::tag::Tag;
 use std::convert::TryFrom;
 use std::ffi::CStr;
 
-pub struct Builder<'a> {
-    root: Option<&'a su::Root>,
-    // nua: Option<&'a Nua<'a>>,
+#[derive(Debug, Clone)]
+pub struct Builder {
     tags: Vec<Tag>,
-    closure: Option<Box<EventClosure>>,
-}
-
-impl<'a> std::fmt::Debug for Builder<'a> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
-        f.debug_struct("Builder")
-            .field("root", &self.root)
-            .field("tags", &self.tags)
-            .finish()
-    }
 }
 
 pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec<sys::tagi_t> {
@@ -41,13 +30,13 @@ pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec<sys::tagi_t> {
 }
 
 /* transform this in tag builder, move create to each struct */
-impl<'a> Builder<'a> {
+impl Builder {
     pub fn default() -> Self {
         Builder {
-            root: None,
+            // root: None,
             // nua: None,
             tags: Vec::<Tag>::new(),
-            closure: None,
+            // closure: None,
         }
     }
     pub fn tag(mut self, tag: Tag) -> Self {
@@ -55,61 +44,46 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub fn callback<
-        F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'static,
-    >(
-        mut self,
-        cb: F,
-    ) -> Self {
-        self.closure = Some(Box::new(cb));
-        self
-    }
-
-    pub fn root(mut self, root: &'a su::Root) -> Self {
-        self.root = Some(root);
-        self
-    }
-
-    pub fn create_tags(self) -> Vec<Tag> {
+    pub fn collect(self) -> Vec<Tag> {
         self.tags
     }
 
-    pub fn create_nua(self) -> Result<Box<Nua<'a>>> {
-        let mut nua = Box::new(Nua::_new());
-        let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
+    // pub fn create_nua(self) -> Result<Box<Nua>> {
+    //     let mut nua = Box::new(Nua::_new());
+    //     let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
 
-        let c_root = match &self.root {
-            Some(root) => root.c_ptr,
-            _ => crate::su::get_default_root()?.c_ptr,
-        };
+    //     let c_root = match &self.root {
+    //         Some(root) => root.c_ptr,
+    //         _ => crate::su::get_default_root()?.c_ptr,
+    //     };
 
-        let tags = convert_tags(&self.tags);
-        let sys_tags = tags.as_slice();
+    //     let tags = convert_tags(&self.tags);
+    //     let sys_tags = tags.as_slice();
 
-        let c_callback = nua_callback_glue;
-        let magic = nua_ptr;
-        nua.closure = self.closure;
-        nua.c_ptr = Nua::_create(c_root, Some(c_callback), magic, Some(sys_tags))?;
-        nua.root = self.root;
-        Ok(nua)
-    }
+    //     let c_callback = nua_callback_glue;
+    //     let magic = nua_ptr;
+    //     nua.closure = self.closure;
+    //     nua.c_ptr = Nua::_create(c_root, Some(c_callback), magic, Some(sys_tags))?;
+    //     nua.root = self.root;
+    //     Ok(nua)
+    // }
 
-    pub fn create(self) -> Result<Box<Nua<'a>>> {
-        self.create_nua()
-    }
+    // pub fn create(self) -> Result<Box<Nua>> {
+    //     self.create_nua()
+    // }
 
-    pub fn create_handle(self, nua: &'a Box<Nua<'_>>) -> Result<Box<Handle<'a>>> {
-        let mut handle = Box::new(Handle::_new());
-        let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
+    // pub fn create_handle(self, nua: &'a Box<Nua<'_>>) -> Result<Box<Handle>> {
+    //     let mut handle = Box::new(Handle::_new());
+    //     let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
 
-        let tags = convert_tags(&self.tags);
-        let sys_tags = tags.as_slice();
-        let magic = handle_ptr;
+    //     let tags = convert_tags(&self.tags);
+    //     let sys_tags = tags.as_slice();
+    //     let magic = handle_ptr;
 
-        handle.c_ptr = Handle::_create(nua.c_ptr, magic, Some(sys_tags))?;
-        handle.nua = Some(nua);
-        Ok(handle)
-    }
+    //     handle.c_ptr = Handle::_create(nua.c_ptr, magic, Some(sys_tags))?;
+    //     handle.nua = Some(nua);
+    //     Ok(handle)
+    // }
 }
 
 /// Called from C code, it will convert C types to Rust types and call Rust function with these types
