@@ -19,19 +19,6 @@ impl<'a> Handle<'a> {
         }
     }
 
-    // pub fn create_handle(self, nua: &'a Box<Nua<'_>>) -> Result<Box<Handle>> {
-    //     let mut handle = Box::new(Handle::_new());
-    //     let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
-
-    //     let tags = convert_tags(&self.tags);
-    //     let sys_tags = tags.as_slice();
-    //     let magic = handle_ptr;
-
-    //     handle.c_ptr = Handle::_create(nua.c_ptr, magic, Some(sys_tags))?;
-    //     handle.nua = Some(nua);
-    //     Ok(handle)
-    // }
-
     pub fn create(nua: &'a Box<Nua<'_>>, tags: Vec<Tag>) -> Result<Box<Handle<'a>>> {
         // todo!()
         let mut handle = Box::new(Self::_new());
