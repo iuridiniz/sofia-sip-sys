@@ -1,11 +1,11 @@
-use crate::nua::builder::Builder;
 use crate::nua::event::Event;
 use crate::nua::nua::Handle;
 use crate::nua::Nua;
 use crate::su;
 use crate::su::wrap;
+use crate::tag::builder::Builder;
+use crate::tag::Tag;
 use crate::Sip;
-use crate::Tag;
 
 use adorn::adorn;
 use serial_test::serial;
@@ -255,11 +255,3 @@ fn nua_send_message_to_itself() {
 
     panic!("*********************** ABORTED ***********************");
 }
-
-// #[test]
-// #[ignore]
-// #[adorn(wrap)]
-// #[serial]
-// fn send_register_to_myself() {
-//     assert!(false);
-// }

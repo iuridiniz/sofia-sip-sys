@@ -1,8 +1,8 @@
 use crate::error::Error;
-use crate::nua::builder::convert_tags;
 use crate::nua::Nua;
 use crate::result::Result;
 use crate::sys;
+use crate::tag::builder::convert_tags;
 use crate::tag::Tag;
 
 #[derive(Debug)]
@@ -80,4 +80,6 @@ impl<'a> Handle<'a> {
         let nh = self.c_ptr;
         Self::_message(nh, Some(sys_tags))
     }
+
+    /* FIXME: missing call to destroy (memory leak will occurs) */
 }
