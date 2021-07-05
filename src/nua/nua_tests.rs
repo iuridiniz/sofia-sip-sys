@@ -10,6 +10,9 @@ use crate::su::wrap;
 use adorn::adorn;
 use serial_test::serial;
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 #[test]
 #[adorn(wrap)]
 #[serial]
@@ -105,7 +108,7 @@ fn create_nua_with_custom_url() {
 }
 
 #[test]
-// #[adorn(wrap)]
+#[adorn(wrap)]
 #[serial]
 fn create_two_nua_with_same_port() {
     let url = Tag::NuUrl("sip:*:5080").unwrap();
@@ -209,7 +212,6 @@ fn create_two_nua_with_same_port() {
 // }
 
 #[test]
-// #[ignore]
 #[adorn(wrap)]
 #[serial]
 fn nua_send_message_to_itself() {
@@ -251,7 +253,7 @@ fn nua_send_message_to_itself() {
     */
     let my_message = "Hi\n";
     let root = Root::new().unwrap();
-    let url = std::rc::Rc::new("sip:127.0.0.1:9997");
+    let url = Rc::new("sip:127.0.0.1:9997");
 
     let mut nua = {
         let url = Tag::NuUrl(&url.clone()).unwrap();
@@ -259,18 +261,19 @@ fn nua_send_message_to_itself() {
         Nua::create_with_root(&root, tags).unwrap()
     };
 
+    let recv_message = Rc::new(RefCell::new(String::new()));
+
     {
-        // let my_message = my_message.clone();
+        let recv_message = recv_message.clone();
         nua.callback(
-            |nua: &mut Nua,
-             event: NuaEvent,
-             status: u32,
-             phrase: String,
-             handle: Option<&Handle>,
-             sip: Sip,
-             tags: Vec<Tag>| {
+            move |nua: &mut Nua,
+                  event: NuaEvent,
+                  status: u32,
+                  phrase: String,
+                  handle: Option<&Handle>,
+                  sip: Sip,
+                  tags: Vec<Tag>| {
                 dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-                // dbg!(&event);
                 let root: &Root = nua.root();
                 match event {
                     NuaEvent::ReplyShutdown => {
@@ -282,12 +285,11 @@ fn nua_send_message_to_itself() {
                         println!("To: {}", sip.to());
                         println!("Subject: {}", sip.subject());
                         println!("ContentType: {}", sip.content_type());
-                        println!("Payload: {:?}", sip.payload().as_utf8_lossy());
-                        assert_eq!(sip.payload().as_utf8_lossy(), my_message);
+                        let payload = sip.payload().as_utf8_lossy();
+                        println!("Payload: {:?}", &payload);
+                        recv_message.borrow_mut().push_str(&payload);
                     }
-                    NuaEvent::ReplyMessage => {
-                        // dbg!(my_message);
-                    }
+                    NuaEvent::ReplyMessage => {}
                     _ => {}
                 }
             },
@@ -311,7 +313,7 @@ fn nua_send_message_to_itself() {
         .collect();
 
     handle.message(tags);
-    root.sleep(1000);
+    root.sleep(0);
 
-    // panic!("*********************** ABORTED ***********************");
+    assert_eq!(&*recv_message.borrow(), my_message);
 }
