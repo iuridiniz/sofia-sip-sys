@@ -7,8 +7,10 @@ pub mod sys;
 pub mod tag;
 
 pub use crate::nua::event::Event as NuaEvent;
+pub use crate::nua::Handle;
 pub use crate::nua::Nua;
 pub use crate::sip::Sip;
+pub use crate::su::Root;
 pub use crate::tag::builder::Builder as TagBuilder;
 pub use crate::tag::Tag;
 
