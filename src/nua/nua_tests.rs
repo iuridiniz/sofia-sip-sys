@@ -132,85 +132,6 @@ fn create_two_nua_with_same_port() {
     assert!(Nua::create_with_root(&root, tags).is_err());
 }
 
-// #[test]
-// #[ignore]
-// #[adorn(wrap)]
-// #[serial]
-// fn test_nua_a_send_message_to_nua_b() {
-//     /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
-//     /*
-//     A                    B
-//     |-------MESSAGE----->|
-//     |<--------200--------| (method allowed, responded)
-//     |                    |
-
-//                            ______(NETWORK)_____
-//                           /                    \
-//     A                 NUA STACK (A)         NUA STACK (B)             B
-//     |                     |                     |                     |
-//     |    nua::handle(B)   |                     |                     |
-//     |-------------------->|                     |                     |
-//     |                     |                     |                     |
-//     |  handle::message()  |                     |                     |
-//     |------------------->[_]      [MESSAGE]     |                     |
-//     |                    [_]------------------>[_]   IncomingMessage  |
-//     |                    [_]                   [_]------------------->|
-//     |                    [_]                   [_]   nua::handle(A)   |
-//     |                    [_]      [200 OK]     [_]                    |
-//     |    ReplyMessage    [_]<------------------[_]                    |
-//     |<------------------ [_]                    |                     |
-//     |                     |                     |                     |
-//     |                     |                     |                     |
-
-//     */
-//     let root = Root::new().unwrap();
-
-//     let mut nua_a = {
-//         let url = Tag::NuUrl("sip:127.0.0.1:5080").unwrap();
-//         TagBuilder::default().root(&root).tag(url).create().unwrap()
-//     };
-
-//     // let nua_b = {
-//     //     let url = Tag::NuUrl("sip:127.0.0.1:5081").unwrap();
-//     //     TagBuilder::default()
-//     //         .root(&root)
-//     //         .tag(url)
-//     //         .create().unwrap()
-//     // };
-
-//     nua_a.callback(|nua: &mut Nua, event: NuaEvent, status: u32, phrase: String| {
-//         dbg!(&nua, &event, &status, &phrase);
-//     });
-
-//     let url = "Joe User <sip:joe.user@localhost:5081;param=1>;tag=12345678";
-
-//     let handle = TagBuilder::default()
-//         // .tag(Tag::SipTo(url.clone()).unwrap())
-//         // .tag(Tag::NuUrl(url.clone()).unwrap())
-//         .create_handle(&nua_a)
-//         .unwrap();
-
-//     // dbg!(&handle);
-
-//     let tags = TagBuilder::default()
-//         .tag(Tag::SipSubject("NUA").unwrap())
-//         .tag(Tag::SipTo(url.clone()).unwrap())
-//         .tag(Tag::NuUrl(url.clone()).unwrap())
-//         .tag(Tag::SipContentType("text/plain").unwrap())
-//         .tag(Tag::SipPayload("Hi\n").unwrap())
-//         .create_tags();
-//     // dbg!(&tags);
-
-//     println!("BEFORE MESSAGE");
-//     handle.message(tags);
-//     println!("AFTER MESSAGE");
-
-//     root.sleep(100);
-//     println!("AFTER RUN");
-
-//     panic!("abort");
-// }
-
 #[test]
 #[adorn(wrap)]
 #[serial]
@@ -314,6 +235,133 @@ fn nua_send_message_to_itself() {
 
     handle.message(tags);
     root.sleep(0);
+
+    assert_eq!(&*recv_message.borrow(), my_message);
+}
+
+#[test]
+#[adorn(wrap)]
+#[serial]
+fn test_nua_a_send_message_to_nua_b() {
+    /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
+    /*
+    A                    B
+    |-------MESSAGE----->|
+    |<--------200--------| (method allowed, responded)
+    |                    |
+
+                           ______(NETWORK)_____
+                          /                    \
+    A                 NUA STACK (A)         NUA STACK (B)             B
+    |                     |                     |                     |
+    |    nua::handle(B)   |                     |                     |
+    |-------------------->|                     |                     |
+    |                     |                     |                     |
+    |  handle::message()  |                     |                     |
+    |------------------->[_]      [MESSAGE]     |                     |
+    |                    [_]------------------>[_]   IncomingMessage  |
+    |                    [_]                   [_]------------------->|
+    |                    [_]                   [_]   nua::handle(A)   |
+    |                    [_]      [200 OK]     [_]                    |
+    |    ReplyMessage    [_]<------------------[_]                    |
+    |<------------------ [_]                    |                     |
+    |                     |                     |                     |
+    |                     |                     |                     |
+
+    */
+    let nua_a_url = "sip:127.0.0.1:5080";
+    let mut nua_a = {
+        let url = Tag::NuUrl(nua_a_url).unwrap();
+        let tags = TagBuilder::default().tag(url).collect();
+        Nua::create(tags).unwrap()
+    };
+    let nua_b_url = "sip:127.0.0.1:5081";
+    let mut nua_b = {
+        let url = Tag::NuUrl(nua_b_url).unwrap();
+        let tags = TagBuilder::default().tag(url).collect();
+        Nua::create(tags).unwrap()
+    };
+    let recv_message = Rc::new(RefCell::new(String::new()));
+    {
+        /* NUA B */
+        let recv_message = recv_message.clone();
+        nua_b.callback(
+            move |nua: &mut Nua,
+                  event: NuaEvent,
+                  status: u32,
+                  phrase: String,
+                  handle: Option<&Handle>,
+                  sip: Sip,
+                  tags: Vec<Tag>| {
+                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+                let root: &Root = nua.root();
+                println!("[NUA _B]Event: {:?}", &event);
+                match event {
+                    NuaEvent::ReplyShutdown => {}
+                    NuaEvent::IncomingMessage => {
+                        println!("[NUA _B]Received MESSAGE: {} {}", status, &phrase);
+                        println!("[NUA _B]From: {}", sip.from());
+                        println!("[NUA _B]To: {}", sip.to());
+                        println!("[NUA _B]Subject: {}", sip.subject());
+                        println!("[NUA _B]ContentType: {}", sip.content_type());
+                        let payload = sip.payload().as_utf8_lossy();
+                        println!("[NUA _B]Payload: {:?}", &payload);
+                        recv_message.borrow_mut().push_str(&payload);
+                    }
+                    NuaEvent::ReplyMessage => {}
+                    _ => {}
+                }
+            },
+        );
+    }
+    {
+        /* NUA A */
+        let recv_message = recv_message.clone();
+        nua_a.callback(
+            move |nua: &mut Nua,
+                  event: NuaEvent,
+                  status: u32,
+                  phrase: String,
+                  handle: Option<&Handle>,
+                  sip: Sip,
+                  tags: Vec<Tag>| {
+                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+                let root: &Root = nua.root();
+                println!("[NUA A_]Event: {:?}", &event);
+                match event {
+                    NuaEvent::ReplyShutdown => {}
+                    NuaEvent::IncomingMessage => {}
+                    NuaEvent::ReplyMessage => {
+                        root.break_();
+                    }
+                    _ => {}
+                }
+            },
+        );
+    }
+    let my_message = "Hi\n";
+
+    let handle = {
+        let tags = TagBuilder::default()
+            .tag(Tag::SipTo(nua_b_url).unwrap())
+            .tag(Tag::NuUrl(nua_b_url).unwrap())
+            .collect();
+        Handle::create(&nua_a, tags).unwrap()
+    };
+
+    let tags = TagBuilder::default()
+        .tag(Tag::SipSubject("NUA").unwrap())
+        .tag(Tag::SipTo(nua_b_url).unwrap())
+        .tag(Tag::NuUrl(nua_b_url).unwrap())
+        .tag(Tag::SipContentType("text/plain").unwrap())
+        .tag(Tag::SipPayloadString(my_message).unwrap())
+        .collect();
+
+    handle.message(tags);
+    println!("--> Root run start");
+    Root::get_default_root().unwrap().run();
+    // Root::get_default_root().unwrap().sleep(0);
+    println!("--> Root run end");
 
     assert_eq!(&*recv_message.borrow(), my_message);
 }

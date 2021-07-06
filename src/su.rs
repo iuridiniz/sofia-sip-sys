@@ -36,6 +36,10 @@ impl Root {
         })
     }
 
+    pub fn get_default_root() -> Result<&'static Root> {
+        get_default_root()
+    }
+
     pub(crate) fn destroy(&mut self) {
         /* run in order to process any remaining shutdown? */
         // self.rush_until_next_timer();
