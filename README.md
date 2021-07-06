@@ -1,7 +1,7 @@
 
 # Sofia-SIP
 
-Rust bindings for Sofia-SIP (Alpha stage).
+Rust bindings for Sofia-SIP.
 
 
 ## Usage
