@@ -18,7 +18,6 @@ pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec<sys::tagi_t> {
     sys_tags
 }
 
-/* transform this in tag builder, move create to each struct */
 impl Builder {
     pub fn default() -> Self {
         Builder {
