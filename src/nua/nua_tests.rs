@@ -339,7 +339,7 @@ fn test_nua_a_send_message_to_nua_b() {
             },
         );
     }
-    let my_message = "Hi\n";
+    let my_message = "Hi Sofia SIP\n";
 
     let handle = {
         let tags = TagBuilder::default()

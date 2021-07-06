@@ -3,13 +3,14 @@ authors = ["Iuri Diniz <iuridiniz@gmail.com>"]
 build = "build.rs"
 description = "Rust bindings for sofia-sip"
 edition = "2018"
-# the bindings are MIT, but sofia-sip-sys is LGPL-2.1-or-later.
+homepage = "https://github.com/iuridiniz/sofia-sip-sys/"
 keywords = ["sip", "voip", "sofia"]
+# the bindings are MIT, but sofia-sip-sys is LGPL-2.1-or-later.
 license = "MIT"
 links = "sofia-sip-ua"
 name = "sofia-sip"
 repository = "https://github.com/iuridiniz/sofia-sip-sys/"
-version = "0.0.2"
+version = "0.1.0"
 
 [build-dependencies]
 bindgen = "0.58.1"
@@ -21,7 +22,6 @@ pkg-config = "0.3.19"
 
 [dependencies]
 errno = "0.2.7"
-optargs = "0.1.2"
 
 [dev-dependencies]
 adorn = "0.4.0"
