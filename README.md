@@ -10,7 +10,7 @@ Add the following to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-sofia-sip = "*"
+sofia-sip = "0.1.0"
 ```
 
 ## Documentation
@@ -70,7 +70,7 @@ Other:
 Before compiling statically, please read [this](https://www.gnu.org/licenses/gpl-faq.html#LGPLStaticVsDynamic).
 
 ## Roadmap
-- Version 0.1.0
+- Version 0.1.0 -> DONE
     - NUA: Basic support to send and receive SIP MESSAGE's, allowing to create a chat using SIP.
 
 - Version 0.2.0
