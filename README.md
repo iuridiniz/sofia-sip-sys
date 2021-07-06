@@ -86,8 +86,8 @@ fn main() {
                     nua.quit();
                 }
                 NuaEvent::ReplyMessage => {
-                    /* quit if response != 202 */
-                    if status != 202 {
+                    /* quit if response != 2XX */
+                    if status < 200 || status >=300 {
                         nua.quit();
                     }
                 }
