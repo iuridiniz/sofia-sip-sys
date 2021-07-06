@@ -219,6 +219,22 @@ impl<'a> Nua<'a> {
         };
         self.c_ptr = std::ptr::null_mut();
     }
+
+    pub fn run(&self) {
+        self.root.unwrap().run();
+    }
+
+    pub fn r#break(&self) {
+        self.root.unwrap().r#break();
+    }
+
+    pub fn break_(&self) {
+        self.r#break();
+    }
+
+    pub fn quit(&self) {
+        self.r#break();
+    }
 }
 
 impl<'a> Drop for Nua<'a> {
