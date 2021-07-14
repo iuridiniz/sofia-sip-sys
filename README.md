@@ -173,12 +173,12 @@ Other:
  - [Original Sofia-SIP (not currently maintained)](http://sofia-sip.sourceforge.net/).
  - [Freeswitch version of Sofia-SIP (Currently maintained)](https://bulldogjob.com/news/449-how-to-write-a-good-readme-for-your-github-project).
 
-  
+
 ## Authors
 
 - [@iuridiniz](https://www.github.com/iuridiniz)
 
-  
+
 ## License
 
 - Rust bindings: [MIT](https://choosealicense.com/licenses/mit/)
