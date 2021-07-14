@@ -13,7 +13,15 @@ Add the following to your `Cargo.toml`:
 sofia-sip = "0.1.0"
 ```
 
-Example
+Also, make sure you have sofia-sip C library installed in your system (`pkg-config sofia-sip-ua --modversion` is working), in ubuntu, you can install it by doing:
+
+```bash
+sudo apt install libsofia-sip-ua-dev
+```
+
+Future versions will have an option (via cargo features) to build and bundle C sofia-sip as a static library.
+
+### Example
 
 ```rust
 use sofia_sip::{Handle, Nua, NuaEvent, Sip, Tag, TagBuilder};
