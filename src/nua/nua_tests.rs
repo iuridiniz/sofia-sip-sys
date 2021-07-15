@@ -440,7 +440,11 @@ fn test_basic_call_incomplete() {
              sip: Sip,
              tags: Vec<Tag>| {
                 // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-                println!("[NUA _B]Event: {:?}", &event);
+                println!(
+                    "[NUA _B]Event: {:?} // status: {:?} // phrase: {:?}",
+                    &event, &status, &phrase
+                );
+                // println!("[NUA _B]Event: {:?}", &event);
                 match event {
                     _ => {}
                 }
@@ -459,7 +463,11 @@ fn test_basic_call_incomplete() {
              sip: Sip,
              tags: Vec<Tag>| {
                 // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-                println!("[NUA A_]Event: {:?}", &event);
+                // println!("[NUA A_]Event: {:?}", &event);
+                println!(
+                    "[NUA A_]Event: {:?} // status: {:?} // phrase: {:?}",
+                    &event, &status, &phrase
+                );
                 match event {
                     _ => {}
                 }

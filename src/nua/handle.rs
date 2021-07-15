@@ -22,7 +22,6 @@ impl<'a> Handle<'a> {
     }
 
     pub fn create(nua: &'a Box<Nua<'_>>, tags: &[Tag]) -> Result<Box<Handle<'a>>> {
-        // todo!()
         let mut handle = Box::new(Self::_new());
         let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
 
