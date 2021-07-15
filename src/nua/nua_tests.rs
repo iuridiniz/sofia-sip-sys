@@ -433,13 +433,13 @@ fn test_basic_call_incomplete() {
     {
         /* NUA B */
         nua_b.callback(
-            move |nua: &mut Nua,
-                  event: NuaEvent,
-                  status: u32,
-                  phrase: String,
-                  handle: Option<&Handle>,
-                  sip: Sip,
-                  tags: Vec<Tag>| {
+            |nua: &mut Nua,
+             event: NuaEvent,
+             status: u32,
+             phrase: String,
+             handle: Option<&Handle>,
+             sip: Sip,
+             tags: Vec<Tag>| {
                 // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
                 println!("[NUA _B]Event: {:?}", &event);
                 match event {
@@ -452,13 +452,13 @@ fn test_basic_call_incomplete() {
     {
         /* NUA A */
         nua_a.callback(
-            move |nua: &mut Nua,
-                  event: NuaEvent,
-                  status: u32,
-                  phrase: String,
-                  handle: Option<&Handle>,
-                  sip: Sip,
-                  tags: Vec<Tag>| {
+            |nua: &mut Nua,
+             event: NuaEvent,
+             status: u32,
+             phrase: String,
+             handle: Option<&Handle>,
+             sip: Sip,
+             tags: Vec<Tag>| {
                 // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
                 println!("[NUA A_]Event: {:?}", &event);
                 match event {
@@ -476,7 +476,15 @@ fn test_basic_call_incomplete() {
         Handle::create(&nua_a, &tags).unwrap()
     };
 
-    // handle.invite();
+    let tags = TagBuilder::default().collect();
+
+    /* if handle is detroyed early, this will crash */
+    // handle.invite(&tags);
+
+    // nua_a.step(Some(0));
+    // Root::get_default_root().unwrap().run();
 
     // assert!(false);
+    println!("--> Test end");
+    dbg!(&handle);
 }

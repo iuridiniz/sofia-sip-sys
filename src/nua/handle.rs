@@ -94,5 +94,35 @@ impl<'a> Handle<'a> {
         Self::_message(nh, Some(sys_tags))
     }
 
-    /* FIXME: missing call to destroy (memory leak will occurs) */
+    pub(crate) fn _invite(nh: *mut sys::nua_handle_t, tags: Option<&[sys::tagi_t]>) {
+        let tag_name: *const sys::tag_type_s;
+        let tag_value: isize;
+
+        assert!(!nh.is_null());
+
+        // dbg!(tags);
+
+        if tags.is_none() {
+            /* TAG_NULL */
+            tag_name = std::ptr::null();
+            tag_value = 0;
+        } else {
+            /* TAG_NEXT */
+            tag_name = unsafe { sys::tag_next.as_ptr() };
+            tag_value = tags.unwrap().as_ptr() as isize;
+        }
+        unsafe { sys::nua_invite(nh, tag_name, tag_value) };
+    }
+
+    pub fn invite(&self, tags: &[Tag]) {
+        let tags = convert_tags(tags);
+        let sys_tags = tags.as_slice();
+
+        let nh = self.c_ptr;
+        Self::_invite(nh, Some(sys_tags))
+    }
+
+    /* FIXME: missing a call to destroy
+    but if nua is destroyed, no memory leak will occur due nua auto memory handling
+    */
 }

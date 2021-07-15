@@ -269,7 +269,6 @@ extern "C" fn nua_callback_glue(
         /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
         dbg!(&event);
-
         let status = _status as u32;
 
         let phrase: String = unsafe { CStr::from_ptr(_phrase).to_string_lossy().into_owned() };
@@ -290,7 +289,7 @@ extern "C" fn nua_callback_glue(
         let handle: *mut Handle = _hmagic as *mut Handle;
         // let handle_struct: Option<&Handle>;
         if !handle.is_null() {
-            /* reply to a owned handle function (outgoing sip message) */
+            /* reply to an owned handle function (outgoing sip message) */
             let handle: &Handle = unsafe { &*handle };
             assert_eq!(sys_handle, handle.c_ptr);
             // handle_struct = Some(handle_struct_temp);
