@@ -142,6 +142,18 @@ Sofia-SIP Rust bindings tries to mimic almost as possible the API of Sofia-SIP C
 After this intro, please read [examples](https://github.com/iuridiniz/sofia-sip-sys/blob/main/examples) or [the tests from Nua module](https://github.com/iuridiniz/sofia-sip-sys/blob/main/src/nua/nua_tests.rs).
 
 ### Sofia-SIP C docs
+#### NUA documentation
+
+The best way to learn sofia-sip is by learning how to use the NUA engine, their call model and how NUA events are presented and handled.
+
+- ["NUA" - High-Level User Agent Module](http://sofia-sip.sourceforge.net/refdocs/nua/).
+  - The NUA engine hides many low-level signaling and media management aspects from the application programmer.
+- [NUA Call Model](http://sofia-sip.sourceforge.net/refdocs/nua/nua_call_model.html).
+  - The call model is used to present changes in call: when media starts to flow, when call is considered established, when call is terminated.
+- [NUA Event Diagrams](http://sofia-sip.sourceforge.net/refdocs/nua/nua_event_diagrams.html)
+  - Example diagrams to present how to use NUA API with different SIP use cases.
+
+#### SOFIA Modules
 
 [Sofia SIP User Agent Library - sofia-sip-ua](http://sofia-sip.sourceforge.net/refdocs/index.html)
 
