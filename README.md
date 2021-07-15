@@ -188,7 +188,7 @@ Other:
 ## Acknowledgements
 
  - [Original Sofia-SIP (not currently maintained)](http://sofia-sip.sourceforge.net/).
- - [Freeswitch version of Sofia-SIP (Currently maintained)](https://bulldogjob.com/news/449-how-to-write-a-good-readme-for-your-github-project).
+ - [Freeswitch version of Sofia-SIP (Currently maintained)](https://github.com/freeswitch/sofia-sip/).
 
 
 ## Authors
