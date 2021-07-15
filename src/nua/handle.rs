@@ -9,6 +9,7 @@ use crate::tag::Tag;
 pub struct Handle<'a> {
     pub(crate) nua: Option<&'a Nua<'a>>,
     pub(crate) c_ptr: *mut sys::nua_handle_t,
+    terminate_completed: bool,
 }
 
 impl<'a> Handle<'a> {
@@ -16,6 +17,7 @@ impl<'a> Handle<'a> {
         Handle {
             nua: None,
             c_ptr: std::ptr::null_mut(),
+            terminate_completed: false,
         }
     }
 
@@ -122,7 +124,24 @@ impl<'a> Handle<'a> {
         Self::_invite(nh, Some(sys_tags))
     }
 
-    /* FIXME: missing a call to destroy
-    but if nua is destroyed, no memory leak will occur due nua auto memory handling
-    */
+    pub(crate) fn _destroy(nh: *mut sys::nua_handle_t) {
+        assert!(!nh.is_null());
+        unsafe {
+            sys::nua_handle_destroy(nh);
+        };
+    }
+
+    pub(crate) fn destroy(&mut self) {
+        if self.c_ptr.is_null() {
+            return;
+        }
+        Self::_destroy(self.c_ptr);
+        self.c_ptr = std::ptr::null_mut();
+    }
+}
+
+impl<'a> Drop for Handle<'a> {
+    fn drop(&mut self) {
+        self.destroy()
+    }
 }

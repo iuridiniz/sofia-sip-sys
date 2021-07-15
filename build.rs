@@ -50,10 +50,11 @@ fn main() {
         .allowlist_function("nua_shutdown")
         /* nua handle class */
         .allowlist_function("nua_handle")
+        .allowlist_function("nua_handle_destroy")
         .allowlist_function("nua_handle_has_active_call")
         .allowlist_function("nua_handle_has_call_on_hold")
-        .allowlist_function("nua_message")
-        .allowlist_function("nua_invite")
+        .allowlist_function("nua_message") /* no namespaced, but it needs a nua_handle */
+        .allowlist_function("nua_invite") /* no namespaced, but it needs a nua_handle */
         // .allowlist_type("nua_t")
         // .allowlist_type("nua_s")
         /* tags */

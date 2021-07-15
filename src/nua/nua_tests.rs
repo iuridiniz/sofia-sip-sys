@@ -136,7 +136,6 @@ fn create_two_nua_with_same_port() {
 #[adorn(wrap)]
 #[serial]
 fn nua_send_message_to_itself() {
-    /* FIXME: this panics when two dbg! in nua_callback_glue are uncomment */
     /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
     /*
 
@@ -475,16 +474,15 @@ fn test_basic_call_incomplete() {
             .collect();
         Handle::create(&nua_a, &tags).unwrap()
     };
+    dbg!(&handle);
 
     let tags = TagBuilder::default().collect();
 
-    /* if handle is detroyed early, this will crash */
-    // handle.invite(&tags);
+    handle.invite(&tags);
 
     // nua_a.step(Some(0));
-    // Root::get_default_root().unwrap().run();
+    Root::get_default_root().unwrap().step(Some(0));
 
-    // assert!(false);
     println!("--> Test end");
-    dbg!(&handle);
+    // assert!(false);
 }
