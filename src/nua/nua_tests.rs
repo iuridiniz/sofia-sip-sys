@@ -365,3 +365,117 @@ fn test_nua_a_send_message_to_nua_b() {
 
     assert_eq!(&*recv_message.borrow(), my_message);
 }
+
+#[test]
+#[adorn(wrap)]
+#[serial]
+fn test_basic_call_incomplete() {
+    // see <lib-sofia-ua-c>/tests/test_basic_call.c::test_basic_call1
+    // A                    B
+    // |-------INVITE------>|
+    // |<----100 Trying-----|
+    // |                    |
+    // |<----180 Ringing----|
+    // |                    |
+    // |<------200 OK-------|
+    // |--------ACK-------->|
+    // |                    |
+    // |<-------BYE---------|
+    // |-------200 OK------>|
+    // |                    |
+
+    //                        ______(NETWORK)_____
+    //                       /                    \
+    // A                 NUA STACK (A)         NUA STACK (B)             B
+    // |                     |                     |                     |
+    // |   nua::handle(B)    |                     |                     |
+    // |-------------------->|                     |                     |
+    // |                     |                     |                     |
+    // |  handle::invite()   |                     |                     |
+    // |------------------->[_]    [INVITE/SDP]    |                     |
+    // |                    [_]------------------>[_]   IncomingInvite   |
+    // |                    [_]                   [_]------------------->|
+    // |                    [_]                   [_]   nua::handle(A)   |
+    // |                    [_]                   [_]                    |
+    // |                    [_]    [100 Trying]   [_]                    |
+    // |                    [_]<------------------[_]                    |
+    // |                    [_]   [180 Ringing]   [_]                    |
+    // |                    [_]<------------------[_]                    |
+    // |                    [_]                   [_]  handle::respond() |
+    // |                    [_]      [200 OK]     [_]<-------------------|
+    // |                    [_]<------------------[_]                    |
+    // |     ReplyInvite    [_]                   [_]                    |
+    // |<-------------------[_]       [ACK]       [_]                    |
+    // |                    [_]------------------>[_]   IncomingActive   |
+    // |   IncomingActive   [_]                   [_]------------------->|
+    // |<-------------------[_]                   [_]                    |
+    // |                    [_]                   [_]    handle::bye()   |
+    // |                    [_]       [BYE]       [_]<-------------------|
+    // |    IncomingBye     [_]<------------------[_]                    |
+    // |<-------------------[_]      [200 OK]     [_]                    |
+    // |                    [_]------------------>[_]                    |
+    // |                     |                     |                     |
+    // |                     |                     |                     |
+    let nua_a_url = "sip:127.0.0.1:5080";
+    let mut nua_a = {
+        let url = Tag::NuUrl(nua_a_url).unwrap();
+        let tags = TagBuilder::default().tag(url).collect();
+        Nua::create(tags).unwrap()
+    };
+    let nua_b_url = "sip:127.0.0.1:5081";
+    let mut nua_b = {
+        let url = Tag::NuUrl(nua_b_url).unwrap();
+        let tags = TagBuilder::default().tag(url).collect();
+        Nua::create(tags).unwrap()
+    };
+
+    {
+        /* NUA B */
+        nua_b.callback(
+            move |nua: &mut Nua,
+                  event: NuaEvent,
+                  status: u32,
+                  phrase: String,
+                  handle: Option<&Handle>,
+                  sip: Sip,
+                  tags: Vec<Tag>| {
+                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+                println!("[NUA _B]Event: {:?}", &event);
+                match event {
+                    _ => {}
+                }
+            },
+        );
+    }
+
+    {
+        /* NUA A */
+        nua_a.callback(
+            move |nua: &mut Nua,
+                  event: NuaEvent,
+                  status: u32,
+                  phrase: String,
+                  handle: Option<&Handle>,
+                  sip: Sip,
+                  tags: Vec<Tag>| {
+                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+                println!("[NUA A_]Event: {:?}", &event);
+                match event {
+                    _ => {}
+                }
+            },
+        );
+    }
+
+    let handle = {
+        let tags = TagBuilder::default()
+            .tag(Tag::SipTo(nua_b_url).unwrap())
+            .tag(Tag::NuUrl(nua_b_url).unwrap())
+            .collect();
+        Handle::create(&nua_a, tags).unwrap()
+    };
+
+    // handle.invite();
+
+    // assert!(false);
+}
