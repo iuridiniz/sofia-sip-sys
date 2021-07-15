@@ -33,28 +33,34 @@ fn main() {
         /* su home init / deinit */
         .allowlist_function("su_home_init")
         .allowlist_function("su_home_deinit")
+        .opaque_type("su_home_t")
         /* su root class */
         .allowlist_function("su_root_create")
+        .allowlist_function("su_root_destroy")
         .allowlist_function("su_root_run")
         .allowlist_function("su_root_break")
         .allowlist_function("su_root_step")
         .allowlist_function("su_root_sleep")
         .allowlist_function("su_root_threading")
-        .allowlist_function("su_root_destroy")
-        .allowlist_function("nua_create")
-        .allowlist_function("nua_handle")
-        .allowlist_function("nua_shutdown")
-        .allowlist_function("nua_destroy")
         .opaque_type("su_root_t")
-        /* nua/nua_handle class */
+        /* nua class */
+        .allowlist_function("nua_create")
+        .allowlist_function("nua_destroy")
         .allowlist_function("nua_set_params")
-        .opaque_type("su_home_t")
+        .allowlist_function("nua_shutdown")
+        /* nua handle class */
+        .allowlist_function("nua_handle")
+        .allowlist_function("nua_handle_has_active_call")
+        .allowlist_function("nua_handle_has_call_on_hold")
         .allowlist_function("nua_message")
+        .allowlist_function("nua_invite")
         // .allowlist_type("nua_t")
         // .allowlist_type("nua_s")
         /* tags */
         .allowlist_function("tl_len")
         .allowlist_function("t_snprintf")
+        .allowlist_function("urltag_url_v")
+        .allowlist_function("tag_str_v")
         .allowlist_type("tagi_t")
         .allowlist_type("tag_type_t")
         .allowlist_type("tag_value_t")
@@ -67,6 +73,8 @@ fn main() {
         .allowlist_var("siptag_content_type_str")
         .allowlist_var("siptag_payload_str")
         .allowlist_var("siptag_to_str")
+        .allowlist_var("soatag_user_sdp_str")
+        .allowlist_var("nutag_url")
         /* sip.h */
         .allowlist_type("sip_t")
         /* url.h */
@@ -75,8 +83,6 @@ fn main() {
         // .opaque_type("msg_pub_t")
         .opaque_type("msg_hclass_t") /* struct with bit fields (auto-generated tests fails on this kind of struct) */
         /* nua tags */
-        .allowlist_function("urltag_url_v")
-        .allowlist_var("nutag_url")
         /* libc */
         .allowlist_function("atexit")
         // .opaque_type()
