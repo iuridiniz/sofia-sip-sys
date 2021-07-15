@@ -19,7 +19,7 @@ use std::rc::Rc;
 fn create_nua_with_default_root() {
     let tags = TagBuilder::default().collect();
 
-    Nua::create(tags).unwrap();
+    Nua::create(&tags).unwrap();
 }
 
 #[test]
@@ -29,7 +29,7 @@ fn create_nua_with_custom_root() {
     let tags = TagBuilder::default().collect();
     let root = Root::new().unwrap();
 
-    Nua::create_with_root(&root, tags).unwrap();
+    Nua::create_with_root(&root, &tags).unwrap();
 }
 
 #[test]
@@ -37,7 +37,7 @@ fn create_nua_with_custom_root() {
 #[serial]
 fn nua_set_callback_to_closure() {
     let tags = TagBuilder::default().collect();
-    let mut nua = Nua::create(tags).unwrap();
+    let mut nua = Nua::create(&tags).unwrap();
     nua.callback(
         |nua: &mut Nua,
          event: NuaEvent,
@@ -68,7 +68,7 @@ fn nua_set_callback_to_fn() {
     }
 
     let tags = TagBuilder::default().collect();
-    let mut nua = Nua::create(tags).unwrap();
+    let mut nua = Nua::create(&tags).unwrap();
     nua.callback(cb);
 }
 
@@ -91,7 +91,7 @@ fn create_nua_full() {
     let tags = TagBuilder::default().collect();
     let root = Root::new().unwrap();
 
-    let mut nua = Nua::create_full(&root, cb, tags).unwrap();
+    let mut nua = Nua::create_full(&root, cb, &tags).unwrap();
 }
 
 #[test]
@@ -104,7 +104,7 @@ fn create_nua_with_custom_url() {
 
     let tags = TagBuilder::default().tag(url).collect();
 
-    Nua::create(tags).unwrap();
+    Nua::create(&tags).unwrap();
 }
 
 #[test]
@@ -119,7 +119,7 @@ fn create_two_nua_with_same_port() {
     let b = b.tag(url);
     let tags = b.collect();
 
-    let _nua_a = Nua::create_with_root(&root, tags).unwrap();
+    let _nua_a = Nua::create_with_root(&root, &tags).unwrap();
 
     let url = Tag::NuUrl("sip:*:5080").unwrap();
 
@@ -129,7 +129,7 @@ fn create_two_nua_with_same_port() {
     let b = b.tag(url);
     let tags = b.collect();
 
-    assert!(Nua::create_with_root(&root, tags).is_err());
+    assert!(Nua::create_with_root(&root, &tags).is_err());
 }
 
 #[test]
@@ -179,7 +179,7 @@ fn nua_send_message_to_itself() {
     let mut nua = {
         let url = Tag::NuUrl(&url.clone()).unwrap();
         let tags = TagBuilder::default().tag(url).collect();
-        Nua::create_with_root(&root, tags).unwrap()
+        Nua::create_with_root(&root, &tags).unwrap()
     };
 
     let recv_message = Rc::new(RefCell::new(String::new()));
@@ -222,7 +222,7 @@ fn nua_send_message_to_itself() {
             .tag(Tag::SipTo(&url.clone()).unwrap())
             .tag(Tag::NuUrl(&url.clone()).unwrap())
             .collect();
-        Handle::create(&nua, tags).unwrap()
+        Handle::create(&nua, &tags).unwrap()
     };
 
     let tags = TagBuilder::default()
@@ -233,7 +233,7 @@ fn nua_send_message_to_itself() {
         .tag(Tag::SipPayloadString(my_message).unwrap())
         .collect();
 
-    handle.message(tags);
+    handle.message(&tags);
     root.sleep(0);
 
     assert_eq!(&*recv_message.borrow(), my_message);
@@ -273,13 +273,13 @@ fn test_nua_a_send_message_to_nua_b() {
     let mut nua_a = {
         let url = Tag::NuUrl(nua_a_url).unwrap();
         let tags = TagBuilder::default().tag(url).collect();
-        Nua::create(tags).unwrap()
+        Nua::create(&tags).unwrap()
     };
     let nua_b_url = "sip:127.0.0.1:5081";
     let mut nua_b = {
         let url = Tag::NuUrl(nua_b_url).unwrap();
         let tags = TagBuilder::default().tag(url).collect();
-        Nua::create(tags).unwrap()
+        Nua::create(&tags).unwrap()
     };
     let recv_message = Rc::new(RefCell::new(String::new()));
     {
@@ -346,7 +346,7 @@ fn test_nua_a_send_message_to_nua_b() {
             .tag(Tag::SipTo(nua_b_url).unwrap())
             .tag(Tag::NuUrl(nua_b_url).unwrap())
             .collect();
-        Handle::create(&nua_a, tags).unwrap()
+        Handle::create(&nua_a, &tags).unwrap()
     };
 
     let tags = TagBuilder::default()
@@ -357,7 +357,7 @@ fn test_nua_a_send_message_to_nua_b() {
         .tag(Tag::SipPayloadString(my_message).unwrap())
         .collect();
 
-    handle.message(tags);
+    handle.message(&tags);
     println!("--> Root run start");
     Root::get_default_root().unwrap().run();
     // Root::get_default_root().unwrap().sleep(0);
@@ -420,13 +420,13 @@ fn test_basic_call_incomplete() {
     let mut nua_a = {
         let url = Tag::NuUrl(nua_a_url).unwrap();
         let tags = TagBuilder::default().tag(url).collect();
-        Nua::create(tags).unwrap()
+        Nua::create(&tags).unwrap()
     };
     let nua_b_url = "sip:127.0.0.1:5081";
     let mut nua_b = {
         let url = Tag::NuUrl(nua_b_url).unwrap();
         let tags = TagBuilder::default().tag(url).collect();
-        Nua::create(tags).unwrap()
+        Nua::create(&tags).unwrap()
     };
 
     {
@@ -472,7 +472,7 @@ fn test_basic_call_incomplete() {
             .tag(Tag::SipTo(nua_b_url).unwrap())
             .tag(Tag::NuUrl(nua_b_url).unwrap())
             .collect();
-        Handle::create(&nua_a, tags).unwrap()
+        Handle::create(&nua_a, &tags).unwrap()
     };
 
     // handle.invite();

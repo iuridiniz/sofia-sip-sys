@@ -64,7 +64,7 @@ fn main() {
         .collect();
 
     /* create NUA stack */
-    let mut nua = Nua::create(tags).unwrap();
+    let mut nua = Nua::create(&tags).unwrap();
 
     /*
     Handling of the events coming from NUA stack is done
@@ -95,13 +95,11 @@ fn main() {
                 }
                 NuaEvent::ReplyMessage => {
                     /* quit if response != 2XX */
-                    if status < 200 || status >=300 {
+                    if status < 200 || status >= 300 {
                         nua.quit();
                     }
                 }
-                _ => {
-
-                }
+                _ => {}
             }
         },
     );
@@ -116,7 +114,7 @@ fn main() {
         .collect();
 
     /* create operation handle */
-    let handle = Handle::create(&nua, tags).unwrap();
+    let handle = Handle::create(&nua, &tags).unwrap();
 
     /* build params for handle.message() */
     let tags = TagBuilder::default()
@@ -128,14 +126,13 @@ fn main() {
         .collect();
 
     /* The message() function enqueue a SIP MESSAGE on NUA STACK */
-    handle.message(tags);
+    handle.message(&tags);
 
     /* enter main loop for processing of messages */
     println!("enter the main loop");
     nua.run();
     println!("the main loop exit");
 }
-
 ```
 
 ## Documentation

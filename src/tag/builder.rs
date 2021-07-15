@@ -6,7 +6,7 @@ pub struct Builder {
     tags: Vec<Tag>,
 }
 
-pub(crate) fn convert_tags(tags: &Vec<Tag>) -> Vec<sys::tagi_t> {
+pub(crate) fn convert_tags(tags: &[Tag]) -> Vec<sys::tagi_t> {
     let mut sys_tags = Vec::<sys::tagi_t>::new();
     for tag in tags {
         sys_tags.push(tag.item());

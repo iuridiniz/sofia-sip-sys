@@ -19,7 +19,7 @@ impl<'a> Handle<'a> {
         }
     }
 
-    pub fn create(nua: &'a Box<Nua<'_>>, tags: Vec<Tag>) -> Result<Box<Handle<'a>>> {
+    pub fn create(nua: &'a Box<Nua<'_>>, tags: &[Tag]) -> Result<Box<Handle<'a>>> {
         // todo!()
         let mut handle = Box::new(Self::_new());
         let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
@@ -86,8 +86,8 @@ impl<'a> Handle<'a> {
         unsafe { sys::nua_message(nh, tag_name, tag_value) };
     }
 
-    pub fn message(&self, tags: Vec<Tag>) {
-        let tags = convert_tags(&tags);
+    pub fn message(&self, tags: &[Tag]) {
+        let tags = convert_tags(tags);
         let sys_tags = tags.as_slice();
 
         let nh = self.c_ptr;

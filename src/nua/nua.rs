@@ -63,12 +63,12 @@ impl<'a> Nua<'a> {
     //     Ok(nua)
     // }
 
-    pub fn create(tags: Vec<Tag>) -> Result<Box<Nua<'a>>> {
+    pub fn create(tags: &[Tag]) -> Result<Box<Nua<'a>>> {
         let root = crate::su::get_default_root()?;
         Self::create_with_root(root, tags)
     }
 
-    pub fn create_with_root(root: &'a Root, tags: Vec<Tag>) -> Result<Box<Nua<'a>>> {
+    pub fn create_with_root(root: &'a Root, tags: &[Tag]) -> Result<Box<Nua<'a>>> {
         let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
 
@@ -93,7 +93,7 @@ impl<'a> Nua<'a> {
     pub fn create_full<F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'a>(
         root: &'a Root,
         closure: F,
-        tags: Vec<Tag>,
+        tags: &[Tag],
     ) -> Result<Box<Nua<'a>>> {
         // let root = crate::su::get_default_root()?;
         let mut nua = Self::create_with_root(root, tags).unwrap();
