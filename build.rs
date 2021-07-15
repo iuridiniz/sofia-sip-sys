@@ -82,9 +82,9 @@ fn main() {
         /* msg_types.h */
         // .opaque_type("msg_pub_t")
         .opaque_type("msg_hclass_t") /* struct with bit fields (auto-generated tests fails on this kind of struct) */
-        /* nua tags */
         /* libc */
         .allowlist_function("atexit")
+        .allowlist_function("printf")
         // .opaque_type()
         // .allowlist_function("nua_set_params")
         // .allowlist_function("su_root_run")

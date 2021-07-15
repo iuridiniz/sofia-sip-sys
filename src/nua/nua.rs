@@ -257,7 +257,7 @@ extern "C" fn nua_callback_glue(
 ) {
     // println!("------ nua_callback_glue ------");
 
-    // dbg!(_event, _status, _phrase, _nua, _magic, _nh, _hmagic, _sip, _tags);
+    dbg!(&_event, &_status, &_phrase, &_nua, &_magic, &_nh, &_hmagic, &_sip, &_tags);
 
     /*
     Panics can happen pretty much anywhere in Rust code.
@@ -268,6 +268,7 @@ extern "C" fn nua_callback_glue(
         /* This call is expect to not panic if sofia does not changes their api */
         /* Also, it can happen if memory is corrupted and the process must be aborted, anyway */
         let event: Event = Event::try_from(_event as i32).unwrap();
+        dbg!(&event);
 
         let status = _status as u32;
 
@@ -317,7 +318,9 @@ extern "C" fn nua_callback_glue(
         Nua::_on_sys_nua_event(event, status, phrase, nua, handle, sip, tags);
     }) {
         // Code here must be panic-free.
-        eprintln!("PANIC!! while calling a callback from C: {:?}", e);
+        let error = format!("PANIC!! while calling a callback from C: {:?}\n\0", e);
+        eprint!("{}", &error);
+        unsafe { sys::printf(error.as_ptr() as *const i8) };
         // Abort is safe because it doesn't unwind.
         std::process::abort();
     }

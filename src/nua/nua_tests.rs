@@ -136,6 +136,7 @@ fn create_two_nua_with_same_port() {
 #[adorn(wrap)]
 #[serial]
 fn nua_send_message_to_itself() {
+    /* FIXME: this panics when two dbg! in nua_callback_glue is uncomment */
     /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
     /*
 
