@@ -1,141 +1,43 @@
-use crate::Handle;
-use crate::Nua;
-use crate::NuaEvent;
-use crate::Root;
-use crate::Sip;
-use crate::Tag;
-use crate::TagBuilder;
+use sofia_sip::su;
+use sofia_sip::Handle;
+use sofia_sip::Nua;
+use sofia_sip::NuaEvent;
+use sofia_sip::Root;
+use sofia_sip::Sip;
+use sofia_sip::Tag;
+use sofia_sip::TagBuilder;
 
-use crate::su::wrap;
 use adorn::adorn;
 use serial_test::serial;
 
 use std::cell::RefCell;
 use std::rc::Rc;
 
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn create_nua_with_default_root() {
-    let tags = TagBuilder::default().collect();
-
-    Nua::create(&tags).unwrap();
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn create_nua_with_custom_root() {
-    let tags = TagBuilder::default().collect();
-    let root = Root::create().unwrap();
-
-    Nua::create_with_root(&root, &tags).unwrap();
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn nua_set_callback_to_closure() {
-    let tags = TagBuilder::default().collect();
-    let mut nua = Nua::create(&tags).unwrap();
-    nua.callback(
-        |nua: &mut Nua,
-         event: NuaEvent,
-         status: u32,
-         phrase: String,
-         handle: Option<&Handle>,
-         sip: Sip,
-         tags: Vec<Tag>| {
-            dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-        },
-    )
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn nua_set_callback_to_fn() {
-    fn cb(
-        nua: &mut Nua,
-        event: NuaEvent,
-        status: u32,
-        phrase: String,
-        handle: Option<&Handle>,
-        sip: Sip,
-        tags: Vec<Tag>,
-    ) {
-        dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+fn wrap(f: fn()) {
+    /* manual deinit (because tests do not run atexit) */
+    if let Err(e) = std::panic::catch_unwind(|| {
+        su::init().unwrap();
+        su::init_default_root().unwrap();
+        f();
+        su::deinit_default_root();
+        su::deinit();
+    }) {
+        su::deinit_default_root();
+        su::deinit();
+        println!(
+            "******************************************************\n\
+             PANIC INSIDE WRAPPER\n\
+             `#[adorn(wrap)]` may give a wrong line that panicked\n\
+             ******************************************************\n"
+        );
+        std::panic::resume_unwind(e);
     }
-
-    let tags = TagBuilder::default().collect();
-    let mut nua = Nua::create(&tags).unwrap();
-    nua.callback(cb);
 }
 
 #[test]
 #[adorn(wrap)]
 #[serial]
-fn create_nua_full() {
-    fn cb(
-        nua: &mut Nua,
-        event: NuaEvent,
-        status: u32,
-        phrase: String,
-        handle: Option<&Handle>,
-        sip: Sip,
-        tags: Vec<Tag>,
-    ) {
-        dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-    }
-
-    let tags = TagBuilder::default().collect();
-    let root = Root::create().unwrap();
-
-    let mut nua = Nua::create_full(&root, cb, &tags).unwrap();
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn create_nua_with_custom_url() {
-    let url = Tag::NuUrl("sip:*:5080").unwrap();
-
-    let root = Root::create().unwrap();
-
-    let tags = TagBuilder::default().tag(url).collect();
-
-    Nua::create(&tags).unwrap();
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn create_two_nua_with_same_port() {
-    let url = Tag::NuUrl("sip:*:5080").unwrap();
-
-    let root = Root::create().unwrap();
-
-    let b = TagBuilder::default();
-    let b = b.tag(url);
-    let tags = b.collect();
-
-    let _nua_a = Nua::create_with_root(&root, &tags).unwrap();
-
-    let url = Tag::NuUrl("sip:*:5080").unwrap();
-
-    let root = Root::create().unwrap();
-
-    let b = TagBuilder::default();
-    let b = b.tag(url);
-    let tags = b.collect();
-
-    assert!(Nua::create_with_root(&root, &tags).is_err());
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn nua_send_message_to_itself() {
+fn test_case_nua_send_message_to_itself() {
     /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
     /*
 
@@ -242,7 +144,7 @@ fn nua_send_message_to_itself() {
 #[test]
 #[adorn(wrap)]
 #[serial]
-fn test_nua_a_send_message_to_nua_b() {
+fn test_case_nua_a_send_message_to_nua_b() {
     /* see <lib-sofia-ua-c>/tests/test_simple.c::test_message */
     /*
     A                    B
@@ -364,132 +266,4 @@ fn test_nua_a_send_message_to_nua_b() {
     println!("--> Root run end");
 
     assert_eq!(&*recv_message.borrow(), my_message);
-}
-
-#[test]
-#[adorn(wrap)]
-#[serial]
-fn test_basic_call_incomplete() {
-    // see <lib-sofia-ua-c>/tests/test_basic_call.c::test_basic_call1
-    // A                    B
-    // |-------INVITE------>|
-    // |<----100 Trying-----|
-    // |                    |
-    // |<----180 Ringing----|
-    // |                    |
-    // |<------200 OK-------|
-    // |--------ACK-------->|
-    // |                    |
-    // |<-------BYE---------|
-    // |-------200 OK------>|
-    // |                    |
-
-    //                        ______(NETWORK)_____
-    //                       /                    \
-    // A                 NUA STACK (A)         NUA STACK (B)             B
-    // |                     |                     |                     |
-    // |   nua::handle(B)    |                     |                     |
-    // |-------------------->|                     |                     |
-    // |                     |                     |                     |
-    // |  handle::invite()   |                     |                     |
-    // |------------------->[_]    [INVITE/SDP]    |                     |
-    // |                    [_]------------------>[_]   IncomingInvite   |
-    // |                    [_]                   [_]------------------->|
-    // |                    [_]                   [_]   nua::handle(A)   |
-    // |                    [_]                   [_]                    |
-    // |                    [_]    [100 Trying]   [_]                    |
-    // |                    [_]<------------------[_]                    |
-    // |                    [_]   [180 Ringing]   [_]                    |
-    // |                    [_]<------------------[_]                    |
-    // |                    [_]                   [_]  handle::respond() |
-    // |                    [_]      [200 OK]     [_]<-------------------|
-    // |                    [_]<------------------[_]                    |
-    // |     ReplyInvite    [_]                   [_]                    |
-    // |<-------------------[_]       [ACK]       [_]                    |
-    // |                    [_]------------------>[_]   IncomingActive   |
-    // |   IncomingActive   [_]                   [_]------------------->|
-    // |<-------------------[_]                   [_]                    |
-    // |                    [_]                   [_]    handle::bye()   |
-    // |                    [_]       [BYE]       [_]<-------------------|
-    // |    IncomingBye     [_]<------------------[_]                    |
-    // |<-------------------[_]      [200 OK]     [_]                    |
-    // |                    [_]------------------>[_]                    |
-    // |                     |                     |                     |
-    // |                     |                     |                     |
-    let nua_a_url = "sip:127.0.0.1:5080";
-    let mut nua_a = {
-        let url = Tag::NuUrl(nua_a_url).unwrap();
-        let tags = TagBuilder::default().tag(url).collect();
-        Nua::create(&tags).unwrap()
-    };
-    let nua_b_url = "sip:127.0.0.1:5081";
-    let mut nua_b = {
-        let url = Tag::NuUrl(nua_b_url).unwrap();
-        let tags = TagBuilder::default().tag(url).collect();
-        Nua::create(&tags).unwrap()
-    };
-
-    {
-        /* NUA B */
-        nua_b.callback(
-            |nua: &mut Nua,
-             event: NuaEvent,
-             status: u32,
-             phrase: String,
-             handle: Option<&Handle>,
-             sip: Sip,
-             tags: Vec<Tag>| {
-                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-                println!(
-                    "[NUA _B]Event: {:?} // status: {:?} // phrase: {:?}",
-                    &event, &status, &phrase
-                );
-                // println!("[NUA _B]Event: {:?}", &event);
-                match event {
-                    _ => {}
-                }
-            },
-        );
-    }
-
-    {
-        /* NUA A */
-        nua_a.callback(
-            |nua: &mut Nua,
-             event: NuaEvent,
-             status: u32,
-             phrase: String,
-             handle: Option<&Handle>,
-             sip: Sip,
-             tags: Vec<Tag>| {
-                // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-                // println!("[NUA A_]Event: {:?}", &event);
-                println!(
-                    "[NUA A_]Event: {:?} // status: {:?} // phrase: {:?}",
-                    &event, &status, &phrase
-                );
-                match event {
-                    _ => {}
-                }
-            },
-        );
-    }
-
-    let handle = {
-        let tags = TagBuilder::default()
-            .tag(Tag::SipTo(nua_b_url).unwrap())
-            .tag(Tag::NuUrl(nua_b_url).unwrap())
-            .collect();
-        Handle::create(&nua_a, &tags).unwrap()
-    };
-    dbg!(&handle);
-
-    let tags = TagBuilder::default().collect();
-
-    handle.invite(&tags);
-
-    Root::get_default_root().unwrap().step0();
-
-    println!("--> Test end");
-    // assert!(false);
 }

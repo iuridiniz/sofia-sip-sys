@@ -8,7 +8,6 @@ pub use crate::nua::event::Event;
 pub use crate::nua::event::EventClosure;
 pub use crate::nua::handle::Handle;
 use crate::sip::Sip;
-// use crate::tag::builder::Builder;
 use crate::tag::builder::convert_tags;
 use crate::tag::Tag;
 
@@ -61,12 +60,7 @@ impl<'a> Nua<'a> {
 
         let c_callback = nua_callback_glue;
         let magic = nua_ptr;
-        // match closure {
-        //     Some(cb) => {
-        //         nua.callback(cb);
-        //     }
-        //     _ => {}
-        // }
+
         nua.c_ptr = Self::_create(c_root, Some(c_callback), magic, Some(sys_tags))?;
         nua.root = Some(root);
         Ok(nua)
@@ -78,7 +72,6 @@ impl<'a> Nua<'a> {
         closure: F,
         tags: &[Tag],
     ) -> Result<Box<Nua<'a>>> {
-        // let root = crate::su::get_default_root()?;
         let mut nua = Self::create_with_root(root, tags).unwrap();
         nua.callback(closure);
         Ok(nua)
@@ -316,5 +309,140 @@ extern "C" fn nua_callback_glue(
         // unsafe { sys::printf(error.as_ptr() as *const i8) };
         // Abort is safe because it doesn't unwind.
         std::process::abort();
+    }
+}
+#[cfg(test)]
+mod tests {
+    // use crate::Handle;
+    // use crate::Nua;
+    // use crate::Root;
+    // use crate::Sip;
+    // use crate::Tag;
+    use crate::NuaEvent;
+    use crate::TagBuilder;
+
+    use super::*;
+
+    use crate::su::wrap;
+    use adorn::adorn;
+    use serial_test::serial;
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn create_nua_with_default_root() {
+        let tags = TagBuilder::default().collect();
+
+        Nua::create(&tags).unwrap();
+    }
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn create_nua_with_custom_root() {
+        let tags = TagBuilder::default().collect();
+        let root = Root::create().unwrap();
+
+        Nua::create_with_root(&root, &tags).unwrap();
+    }
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn nua_set_callback_to_closure() {
+        let tags = TagBuilder::default().collect();
+        let mut nua = Nua::create(&tags).unwrap();
+        nua.callback(
+            |nua: &mut Nua,
+             event: NuaEvent,
+             status: u32,
+             phrase: String,
+             handle: Option<&Handle>,
+             sip: Sip,
+             tags: Vec<Tag>| {
+                dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+            },
+        )
+    }
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn nua_set_callback_to_fn() {
+        fn cb(
+            nua: &mut Nua,
+            event: NuaEvent,
+            status: u32,
+            phrase: String,
+            handle: Option<&Handle>,
+            sip: Sip,
+            tags: Vec<Tag>,
+        ) {
+            dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+        }
+
+        let tags = TagBuilder::default().collect();
+        let mut nua = Nua::create(&tags).unwrap();
+        nua.callback(cb);
+    }
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn create_nua_full() {
+        fn cb(
+            nua: &mut Nua,
+            event: NuaEvent,
+            status: u32,
+            phrase: String,
+            handle: Option<&Handle>,
+            sip: Sip,
+            tags: Vec<Tag>,
+        ) {
+            dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
+        }
+
+        let tags = TagBuilder::default().collect();
+        let root = Root::create().unwrap();
+
+        let mut nua = Nua::create_full(&root, cb, &tags).unwrap();
+    }
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn create_nua_with_custom_url() {
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
+
+        let root = Root::create().unwrap();
+
+        let tags = TagBuilder::default().tag(url).collect();
+
+        Nua::create(&tags).unwrap();
+    }
+
+    #[test]
+    #[adorn(wrap)]
+    #[serial]
+    fn create_two_nua_with_same_port() {
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
+
+        let root = Root::create().unwrap();
+
+        let b = TagBuilder::default();
+        let b = b.tag(url);
+        let tags = b.collect();
+
+        let _nua_a = Nua::create_with_root(&root, &tags).unwrap();
+
+        let url = Tag::NuUrl("sip:*:5080").unwrap();
+
+        let root = Root::create().unwrap();
+
+        let b = TagBuilder::default();
+        let b = b.tag(url);
+        let tags = b.collect();
+
+        assert!(Nua::create_with_root(&root, &tags).is_err());
     }
 }

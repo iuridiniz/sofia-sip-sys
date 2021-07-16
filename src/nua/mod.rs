@@ -6,6 +6,3 @@ pub use crate::nua::event::Event;
 pub use crate::nua::event::EventClosure;
 pub use crate::nua::nua::Handle;
 pub use crate::nua::nua::Nua;
-
-#[cfg(test)]
-mod nua_tests;

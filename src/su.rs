@@ -233,7 +233,7 @@ pub fn get_default_root() -> Result<&'static Root> {
     Ok(root)
 }
 
-pub(crate) fn deinit_default_root() {
+pub fn deinit_default_root() {
     match is_default_root_initialized() {
         false => (),
         true => {
