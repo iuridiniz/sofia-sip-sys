@@ -1,0 +1,6 @@
+[submodule "vendor/freeswitch-sofia-sip"]
+	path = vendor/freeswitch-sofia-sip
+	url = https://github.com/freeswitch/sofia-sip.git
+[submodule "vendor/original-sofia-sip"]
+	path = vendor/original-sofia-sip
+	url = https://git.code.sf.net/p/sofia-sip/git
