@@ -44,18 +44,18 @@ impl Root {
     pub(crate) fn destroy(&mut self) {
         /* run in order to process any remaining shutdown? */
         // self.rush_until_next_timer();
-        self._destroy()
+        Self::_destroy(self.c_ptr);
+        self.c_ptr = std::ptr::null_mut();
     }
 
     #[inline]
-    pub(crate) fn _destroy(&mut self) {
-        if self.c_ptr.is_null() {
+    pub(crate) fn _destroy(root: *mut sys::su_root_t) {
+        if root.is_null() {
             return;
         }
         unsafe {
-            sys::su_root_destroy(self.c_ptr);
+            sys::su_root_destroy(root);
         }
-        self.c_ptr = std::ptr::null_mut();
     }
 
     pub fn step(&self, timeout: Option<i64>) -> i64 {
@@ -63,50 +63,50 @@ impl Root {
             Some(x) if x >= 0 && x < 1000 => x,
             _ => 100,
         };
-        self._step(timeout)
+        Self::_step(self.c_ptr, timeout)
     }
 
     #[inline]
-    pub(crate) fn _step(&self, timeout: i64) -> i64 {
-        assert!(!self.c_ptr.is_null());
-        let root: *mut sys::su_root_t = self.c_ptr;
+    pub(crate) fn _step(root: *mut sys::su_root_t, timeout: i64) -> i64 {
+        assert!(!root.is_null());
         unsafe { sys::su_root_step(root, timeout) }
     }
 
     pub fn sleep(&self, timeout: i64) -> i64 {
-        self._sleep(timeout)
+        Self::_sleep(self.c_ptr, timeout)
     }
 
     #[inline]
-    pub(crate) fn _sleep(&self, timeout: i64) -> i64 {
-        assert!(!self.c_ptr.is_null());
-        let root: *mut sys::su_root_t = self.c_ptr;
+    pub(crate) fn _sleep(root: *mut sys::su_root_t, timeout: i64) -> i64 {
+        assert!(!root.is_null());
         unsafe { sys::su_root_sleep(root, timeout) }
     }
 
     pub fn run(&self) {
-        self._run()
+        Self::_run(self.c_ptr)
     }
 
     #[inline]
-    pub(crate) fn _run(&self) {
-        assert!(!self.c_ptr.is_null());
-        let root: *mut sys::su_root_t = self.c_ptr;
+    pub(crate) fn _run(root: *mut sys::su_root_t) {
+        assert!(!root.is_null());
         unsafe { sys::su_root_run(root) }
     }
 
     pub fn r#break(&self) {
-        self._break()
+        Self::_break(self.c_ptr)
     }
 
     pub fn break_(&self) {
-        self.r#break()
+        Self::_break(self.c_ptr)
+    }
+
+    pub fn quit(&self) {
+        Self::_break(self.c_ptr)
     }
 
     #[inline]
-    pub(crate) fn _break(&self) {
-        assert!(!self.c_ptr.is_null());
-        let root: *mut sys::su_root_t = self.c_ptr;
+    pub(crate) fn _break(root: *mut sys::su_root_t) {
+        assert!(!root.is_null());
         unsafe { sys::su_root_break(root) }
     }
 }
