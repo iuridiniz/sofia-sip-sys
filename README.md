@@ -201,7 +201,7 @@ Other:
 
 ## Acknowledgements
 
- - [Original Sofia-SIP (not currently maintained)](http://sofia-sip.sourceforge.net/).
+ - [Original Sofia-SIP (not currently maintained)](https://sourceforge.net/projects/sofia-sip/).
  - [Freeswitch version of Sofia-SIP (Currently maintained)](https://github.com/freeswitch/sofia-sip/).
 
 
