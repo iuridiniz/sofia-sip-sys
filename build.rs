@@ -33,6 +33,7 @@ fn main() {
         /* su home init / deinit */
         .allowlist_function("su_home_init")
         .allowlist_function("su_home_deinit")
+        // .allowlist_type("su_home_t")
         .opaque_type("su_home_t")
         /* su root class */
         .allowlist_function("su_root_create")
