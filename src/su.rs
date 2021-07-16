@@ -58,12 +58,12 @@ impl Root {
         }
     }
 
-    pub fn step(&self, timeout: Option<i64>) -> i64 {
-        let timeout = match timeout {
-            Some(x) if x >= 0 && x < 1000 => x,
-            _ => 100,
-        };
+    pub fn step(&self, timeout: i64) -> i64 {
         Self::_step(self.c_ptr, timeout)
+    }
+
+    pub fn step0(&self) -> i64 {
+        Self::_step(self.c_ptr, 0)
     }
 
     #[inline]
@@ -115,7 +115,7 @@ impl Root {
 impl Root {
     pub fn rush_until_next_timer(&self) {
         loop {
-            let remaining = self.step(Some(1));
+            let remaining = self.step0();
             // dbg!(remaining);
             if remaining <= 0 {
                 break;
@@ -655,6 +655,6 @@ pub(crate) mod tests {
     #[serial]
     fn step_must_return_negative_meaning_no_steps_to_run() {
         let root = Root::create().unwrap();
-        assert_eq!(root.step(Some(1)), -1);
+        assert_eq!(root.step0(), -1);
     }
 }

@@ -168,7 +168,7 @@ impl<'a> Nua<'a> {
 
         self.shutdown();
         while !self.shutdown_completed {
-            if self.root().step(Some(1)) < 0 {
+            if self.root().step0() < 0 {
                 break;
             }
         }

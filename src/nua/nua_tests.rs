@@ -488,8 +488,7 @@ fn test_basic_call_incomplete() {
 
     handle.invite(&tags);
 
-    // nua_a.step(Some(0));
-    Root::get_default_root().unwrap().step(Some(0));
+    Root::get_default_root().unwrap().step0();
 
     println!("--> Test end");
     // assert!(false);
