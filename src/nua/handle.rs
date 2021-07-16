@@ -5,6 +5,7 @@ use crate::sys;
 use crate::tag::builder::convert_tags;
 use crate::tag::Tag;
 
+/// NUA transaction handle.
 #[derive(Debug)]
 pub struct Handle<'a> {
     pub(crate) nua: Option<&'a Nua<'a>>,
@@ -20,7 +21,7 @@ impl<'a> Handle<'a> {
             terminate_completed: false,
         }
     }
-
+    /// Create an operation handle.
     pub fn create(nua: &'a Box<Nua<'_>>, tags: &[Tag]) -> Result<Box<Handle<'a>>> {
         let mut handle = Box::new(Self::_new());
         let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
@@ -86,7 +87,7 @@ impl<'a> Handle<'a> {
         }
         unsafe { sys::nua_message(nh, tag_name, tag_value) };
     }
-
+    /// Send an instant message.
     pub fn message(&self, tags: &[Tag]) {
         let tags = convert_tags(tags);
         let sys_tags = tags.as_slice();
@@ -115,6 +116,7 @@ impl<'a> Handle<'a> {
         unsafe { sys::nua_invite(nh, tag_name, tag_value) };
     }
 
+    /// Place a call using SIP INVITE method.
     pub fn invite(&self, tags: &[Tag]) {
         let tags = convert_tags(tags);
         let sys_tags = tags.as_slice();

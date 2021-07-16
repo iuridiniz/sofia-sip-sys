@@ -15,6 +15,7 @@ use crate::tag::Tag;
 use std::convert::TryFrom;
 use std::ffi::CStr;
 
+///NUA agent.
 pub struct Nua<'a> {
     pub(crate) root: Option<&'a su::Root>,
     pub(crate) c_ptr: *mut sys::nua_t,
@@ -43,31 +44,12 @@ impl<'a> Nua<'a> {
         }
     }
 
-    // pub fn create_nua(self) -> Result<Box<Nua>> {
-    //     let mut nua = Box::new(Nua::_new());
-    //     let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
-
-    //     let c_root = match &self.root {
-    //         Some(root) => root.c_ptr,
-    //         _ => crate::su::get_default_root()?.c_ptr,
-    //     };
-
-    //     let tags = convert_tags(&self.tags);
-    //     let sys_tags = tags.as_slice();
-
-    //     let c_callback = nua_callback_glue;
-    //     let magic = nua_ptr;
-    //     nua.closure = self.closure;
-    //     nua.c_ptr = Nua::_create(c_root, Some(c_callback), magic, Some(sys_tags))?;
-    //     nua.root = self.root;
-    //     Ok(nua)
-    // }
-
+    ///Create a NUA agent.
     pub fn create(tags: &[Tag]) -> Result<Box<Nua<'a>>> {
         let root = crate::su::get_default_root()?;
         Self::create_with_root(root, tags)
     }
-
+    ///Create a NUA agent.
     pub fn create_with_root(root: &'a Root, tags: &[Tag]) -> Result<Box<Nua<'a>>> {
         let mut nua = Box::new(Nua::_new());
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
@@ -90,6 +72,7 @@ impl<'a> Nua<'a> {
         Ok(nua)
     }
 
+    ///Create a NUA agent.
     pub fn create_full<F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'a>(
         root: &'a Root,
         closure: F,
@@ -99,13 +82,6 @@ impl<'a> Nua<'a> {
         let mut nua = Self::create_with_root(root, tags).unwrap();
         nua.callback(closure);
         Ok(nua)
-    }
-
-    pub fn root(&self) -> &su::Root {
-        match &self.root {
-            Some(root) => root,
-            None => crate::su::get_default_root().unwrap(),
-        }
     }
 
     pub(crate) fn _create(
@@ -168,6 +144,15 @@ impl<'a> Nua<'a> {
         }
     }
 
+    ///Root reactor object.
+    pub fn root(&self) -> &su::Root {
+        match &self.root {
+            Some(root) => root,
+            None => crate::su::get_default_root().unwrap(),
+        }
+    }
+
+    ///NUA event callback.
     pub fn callback<F: Fn(&mut Nua, Event, u32, String, Option<&Handle>, Sip, Vec<Tag>) + 'a>(
         &mut self,
         cb: F,
@@ -175,6 +160,7 @@ impl<'a> Nua<'a> {
         self.closure = Some(Box::new(cb));
     }
 
+    ///Shutdown NUA stack.
     pub fn shutdown_and_wait(&self) {
         if self.shutdown_completed {
             return;
@@ -188,6 +174,7 @@ impl<'a> Nua<'a> {
         }
     }
 
+    ///Shutdown NUA stack.
     pub fn shutdown(&self) {
         if self.shutdown_completed {
             return;
@@ -200,6 +187,7 @@ impl<'a> Nua<'a> {
         unsafe { sys::nua_shutdown(nua) };
     }
 
+    /// Destroy the NUA stack.
     pub(crate) fn destroy(&mut self) {
         if self.c_ptr.is_null() {
             return;
@@ -220,18 +208,22 @@ impl<'a> Nua<'a> {
         };
     }
 
+    ///Run event and message loop.
     pub fn run(&self) {
         self.root.unwrap().run();
     }
 
+    ///Terminate event loop.
     pub fn r#break(&self) {
         self.root.unwrap().r#break();
     }
 
+    ///Terminate event loop.
     pub fn break_(&self) {
         self.r#break();
     }
 
+    ///Terminate event loop.
     pub fn quit(&self) {
         self.r#break();
     }

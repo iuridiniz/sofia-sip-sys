@@ -8,6 +8,7 @@ static ROOT_INITIALIZED: AtomicBool = AtomicBool::new(false);
 
 static mut DEFAULT_ROOT: Option<Root> = None;
 
+/// Root reactor object.
 #[derive(Debug)]
 pub struct Root {
     pub(crate) c_ptr: *mut sys::su_root_t,
