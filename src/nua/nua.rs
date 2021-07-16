@@ -192,12 +192,12 @@ impl<'a> Nua<'a> {
         if self.shutdown_completed {
             return;
         }
-        self._shutdown();
+        Self::_shutdown(self.c_ptr);
     }
 
-    fn _shutdown(&self) {
-        assert!(!self.c_ptr.is_null());
-        unsafe { sys::nua_shutdown(self.c_ptr) };
+    pub(crate) fn _shutdown(nua: *mut sys::nua_s) {
+        assert!(!nua.is_null());
+        unsafe { sys::nua_shutdown(nua) };
     }
 
     pub(crate) fn destroy(&mut self) {
@@ -206,18 +206,18 @@ impl<'a> Nua<'a> {
         }
         /* before destroy we need to shutdown and wait for that shutdown */
         self.shutdown_and_wait();
-        self._destroy();
+        Self::_destroy(self.c_ptr);
+        self.c_ptr = std::ptr::null_mut();
     }
 
-    fn _destroy(&mut self) {
-        if self.c_ptr.is_null() {
+    pub(crate) fn _destroy(nua: *mut sys::nua_s) {
+        if nua.is_null() {
             return;
         }
 
         unsafe {
-            sys::nua_destroy(self.c_ptr);
+            sys::nua_destroy(nua);
         };
-        self.c_ptr = std::ptr::null_mut();
     }
 
     pub fn run(&self) {
