@@ -16,7 +16,7 @@ pub struct Root {
 }
 
 impl Root {
-    pub fn new() -> Result<Root> {
+    pub fn create() -> Result<Root> {
         init()?;
         Root::_create()
     }
@@ -647,14 +647,14 @@ pub(crate) mod tests {
     #[adorn(wrap)]
     #[serial]
     fn create_root() {
-        Root::new().unwrap();
+        Root::create().unwrap();
     }
 
     #[test]
     #[adorn(wrap)]
     #[serial]
     fn step_must_return_negative_meaning_no_steps_to_run() {
-        let root = Root::new().unwrap();
+        let root = Root::create().unwrap();
         assert_eq!(root.step(Some(1)), -1);
     }
 }

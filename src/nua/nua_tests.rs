@@ -27,7 +27,7 @@ fn create_nua_with_default_root() {
 #[serial]
 fn create_nua_with_custom_root() {
     let tags = TagBuilder::default().collect();
-    let root = Root::new().unwrap();
+    let root = Root::create().unwrap();
 
     Nua::create_with_root(&root, &tags).unwrap();
 }
@@ -89,7 +89,7 @@ fn create_nua_full() {
     }
 
     let tags = TagBuilder::default().collect();
-    let root = Root::new().unwrap();
+    let root = Root::create().unwrap();
 
     let mut nua = Nua::create_full(&root, cb, &tags).unwrap();
 }
@@ -100,7 +100,7 @@ fn create_nua_full() {
 fn create_nua_with_custom_url() {
     let url = Tag::NuUrl("sip:*:5080").unwrap();
 
-    let root = Root::new().unwrap();
+    let root = Root::create().unwrap();
 
     let tags = TagBuilder::default().tag(url).collect();
 
@@ -113,7 +113,7 @@ fn create_nua_with_custom_url() {
 fn create_two_nua_with_same_port() {
     let url = Tag::NuUrl("sip:*:5080").unwrap();
 
-    let root = Root::new().unwrap();
+    let root = Root::create().unwrap();
 
     let b = TagBuilder::default();
     let b = b.tag(url);
@@ -123,7 +123,7 @@ fn create_two_nua_with_same_port() {
 
     let url = Tag::NuUrl("sip:*:5080").unwrap();
 
-    let root = Root::new().unwrap();
+    let root = Root::create().unwrap();
 
     let b = TagBuilder::default();
     let b = b.tag(url);
@@ -173,7 +173,7 @@ fn nua_send_message_to_itself() {
     |                     |
     */
     let my_message = "Hi\n";
-    let root = Root::new().unwrap();
+    let root = Root::create().unwrap();
     let url = Rc::new("sip:127.0.0.1:9997");
 
     let mut nua = {
