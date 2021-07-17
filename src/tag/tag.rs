@@ -1,12 +1,20 @@
 // use crate::error::Error;
-use crate::result::Result;
 use crate::sys;
 use std::ffi::CString;
 // use std::convert::TryFrom;
 
+macro_rules! tag_cstring {
+    ($tag:ident, $func:ident) => {
+        #[allow(non_snake_case)]
+        pub fn $func(s: &str) -> Self {
+            Tag::$tag(CString::new(s).expect("unexpected '\0' character"))
+        }
+    };
+}
+
 #[derive(Debug, Clone)]
 pub enum Tag {
-    // NuUrl(String),
+    _PlaceHolder(CString),
     _NuUrl(CString),
     _SipSubjectStr(CString),
     _SipContentTypeStr(CString),
@@ -18,6 +26,7 @@ pub enum Tag {
 impl Tag {
     pub(crate) fn symbol(&self) -> sys::tag_type_t {
         match self {
+            Tag::_PlaceHolder(_) => std::ptr::null() as sys::tag_type_t,
             Tag::_NuUrl(_) => unsafe { sys::nutag_url.as_ptr() },
             Tag::_SipSubjectStr(_) => unsafe { sys::siptag_subject_str.as_ptr() },
             Tag::_SipContentTypeStr(_) => unsafe { sys::siptag_content_type_str.as_ptr() },
@@ -28,7 +37,8 @@ impl Tag {
     }
     pub(crate) fn value(&self) -> sys::tag_value_t {
         match self {
-            Tag::_NuUrl(cstring)
+            Tag::_PlaceHolder(cstring)
+            | Tag::_NuUrl(cstring)
             | Tag::_SipSubjectStr(cstring)
             | Tag::_SipContentTypeStr(cstring)
             | Tag::_SipPayloadStr(cstring)
@@ -44,28 +54,13 @@ impl Tag {
         }
     }
 
-    #[allow(non_snake_case)]
-    pub fn NuUrl(url: &str) -> Result<Self> {
-        Ok(Tag::_NuUrl(CString::new(url)?))
-    }
-
-    #[allow(non_snake_case)]
-    pub fn SipSubject(s: &str) -> Result<Self> {
-        Ok(Tag::_SipSubjectStr(CString::new(s)?))
-    }
-
-    #[allow(non_snake_case)]
-    pub fn SipContentType(s: &str) -> Result<Self> {
-        Ok(Tag::_SipContentTypeStr(CString::new(s)?))
-    }
-
-    #[allow(non_snake_case)]
-    pub fn SipPayloadString(s: &str) -> Result<Self> {
-        Ok(Tag::_SipPayloadStr(CString::new(s)?))
-    }
-
-    #[allow(non_snake_case)]
-    pub fn SipTo(s: &str) -> Result<Self> {
-        Ok(Tag::_SipToStr(CString::new(s)?))
-    }
+    tag_cstring!(_NuUrl, NuUrl);
+    tag_cstring!(_SipSubjectStr, SipSubjectStr);
+    tag_cstring!(_SipContentTypeStr, SipContentTypeStr);
+    tag_cstring!(_SipPayloadStr, SipPayloadStr);
+    tag_cstring!(_SipToStr, SipToStr);
+    // #[allow(non_snake_case)]
+    // pub fn NuUrl(url: &str) -> Self {
+    //     Tag::_NuUrl(CString::new(url).expect("unexpected '\0' character"))
+    // }
 }

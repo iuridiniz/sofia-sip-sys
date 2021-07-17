@@ -412,7 +412,7 @@ mod tests {
     #[adorn(wrap)]
     #[serial]
     fn create_nua_with_custom_url() {
-        let url = Tag::NuUrl("sip:*:5080").unwrap();
+        let url = Tag::NuUrl("sip:*:5080");
 
         let root = Root::create().unwrap();
 
@@ -425,7 +425,7 @@ mod tests {
     #[adorn(wrap)]
     #[serial]
     fn create_two_nua_with_same_port() {
-        let url = Tag::NuUrl("sip:*:5080").unwrap();
+        let url = Tag::NuUrl("sip:*:5080");
 
         let root = Root::create().unwrap();
 
@@ -435,7 +435,7 @@ mod tests {
 
         let _nua_a = Nua::create_with_root(&root, &tags).unwrap();
 
-        let url = Tag::NuUrl("sip:*:5080").unwrap();
+        let url = Tag::NuUrl("sip:*:5080");
 
         let root = Root::create().unwrap();
 

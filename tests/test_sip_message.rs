@@ -79,7 +79,7 @@ fn test_case_nua_send_message_to_itself() {
     let url = Rc::new("sip:127.0.0.1:9997");
 
     let mut nua = {
-        let url = Tag::NuUrl(&url.clone()).unwrap();
+        let url = Tag::NuUrl(&url.clone());
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create_with_root(&root, &tags).unwrap()
     };
@@ -121,18 +121,18 @@ fn test_case_nua_send_message_to_itself() {
 
     let handle = {
         let tags = TagBuilder::default()
-            .tag(Tag::SipTo(&url.clone()).unwrap())
-            .tag(Tag::NuUrl(&url.clone()).unwrap())
+            .tag(Tag::SipToStr(&url.clone()))
+            .tag(Tag::NuUrl(&url.clone()))
             .collect();
         Handle::create(&nua, &tags).unwrap()
     };
 
     let tags = TagBuilder::default()
-        .tag(Tag::SipSubject("NUA").unwrap())
-        .tag(Tag::SipTo(&url.clone()).unwrap())
-        .tag(Tag::NuUrl(&url.clone()).unwrap())
-        .tag(Tag::SipContentType("text/plain").unwrap())
-        .tag(Tag::SipPayloadString(my_message).unwrap())
+        .tag(Tag::SipSubjectStr("NUA"))
+        .tag(Tag::SipToStr(&url.clone()))
+        .tag(Tag::NuUrl(&url.clone()))
+        .tag(Tag::SipContentTypeStr("text/plain"))
+        .tag(Tag::SipPayloadStr(my_message))
         .collect();
 
     handle.message(&tags);
@@ -173,13 +173,13 @@ fn test_case_nua_a_send_message_to_nua_b() {
     */
     let nua_a_url = "sip:127.0.0.1:5080";
     let mut nua_a = {
-        let url = Tag::NuUrl(nua_a_url).unwrap();
+        let url = Tag::NuUrl(nua_a_url);
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
     let nua_b_url = "sip:127.0.0.1:5081";
     let mut nua_b = {
-        let url = Tag::NuUrl(nua_b_url).unwrap();
+        let url = Tag::NuUrl(nua_b_url);
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
@@ -245,18 +245,18 @@ fn test_case_nua_a_send_message_to_nua_b() {
 
     let handle = {
         let tags = TagBuilder::default()
-            .tag(Tag::SipTo(nua_b_url).unwrap())
-            .tag(Tag::NuUrl(nua_b_url).unwrap())
+            .tag(Tag::SipToStr(nua_b_url))
+            .tag(Tag::NuUrl(nua_b_url))
             .collect();
         Handle::create(&nua_a, &tags).unwrap()
     };
 
     let tags = TagBuilder::default()
-        .tag(Tag::SipSubject("NUA").unwrap())
-        .tag(Tag::SipTo(nua_b_url).unwrap())
-        .tag(Tag::NuUrl(nua_b_url).unwrap())
-        .tag(Tag::SipContentType("text/plain").unwrap())
-        .tag(Tag::SipPayloadString(my_message).unwrap())
+        .tag(Tag::SipSubjectStr("NUA"))
+        .tag(Tag::SipToStr(nua_b_url))
+        .tag(Tag::NuUrl(nua_b_url))
+        .tag(Tag::SipContentTypeStr("text/plain"))
+        .tag(Tag::SipPayloadStr(my_message))
         .collect();
 
     handle.message(&tags);

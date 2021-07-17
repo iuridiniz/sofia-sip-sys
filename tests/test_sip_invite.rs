@@ -83,13 +83,13 @@ fn test_case_basic_call_incomplete() {
     // |                     |                     |                     |
     let nua_a_url = "sip:127.0.0.1:5080";
     let mut nua_a = {
-        let url = Tag::NuUrl(nua_a_url).unwrap();
+        let url = Tag::NuUrl(nua_a_url);
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
     let nua_b_url = "sip:127.0.0.1:5081";
     let mut nua_b = {
-        let url = Tag::NuUrl(nua_b_url).unwrap();
+        let url = Tag::NuUrl(nua_b_url);
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
@@ -142,8 +142,8 @@ fn test_case_basic_call_incomplete() {
 
     let handle = {
         let tags = TagBuilder::default()
-            .tag(Tag::SipTo(nua_b_url).unwrap())
-            .tag(Tag::NuUrl(nua_b_url).unwrap())
+            .tag(Tag::SipToStr(nua_b_url))
+            .tag(Tag::NuUrl(nua_b_url))
             .collect();
         Handle::create(&nua_a, &tags).unwrap()
     };

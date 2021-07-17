@@ -48,7 +48,7 @@ fn main() {
 
     /* build params for Nua::create */
     let tags = TagBuilder::default()
-        .tag(Tag::NuUrl(sip_bind_url).unwrap())
+        .tag(Tag::NuUrl(sip_bind_url))
         .collect();
 
     /* create NUA stack */
@@ -97,8 +97,8 @@ fn main() {
 
     /* build params for Handle::create */
     let tags = TagBuilder::default()
-        .tag(Tag::SipTo(sip_to_url).unwrap())
-        .tag(Tag::NuUrl(sip_to_url).unwrap())
+        .tag(Tag::SipToStr(sip_to_url))
+        .tag(Tag::NuUrl(sip_to_url))
         .collect();
 
     /* create operation handle */
@@ -106,11 +106,11 @@ fn main() {
 
     /* build params for handle.message() */
     let tags = TagBuilder::default()
-        .tag(Tag::SipSubject("NUA").unwrap())
-        .tag(Tag::SipTo(sip_to_url).unwrap())
-        .tag(Tag::NuUrl(sip_to_url).unwrap())
-        .tag(Tag::SipContentType("text/plain").unwrap())
-        .tag(Tag::SipPayloadString(my_message).unwrap())
+        .tag(Tag::SipSubjectStr("NUA"))
+        .tag(Tag::SipToStr(sip_to_url))
+        .tag(Tag::NuUrl(sip_to_url))
+        .tag(Tag::SipContentTypeStr("text/plain"))
+        .tag(Tag::SipPayloadStr(my_message))
         .collect();
 
     /* The message() function enqueue a SIP MESSAGE on NUA STACK */
