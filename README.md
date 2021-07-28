@@ -13,13 +13,19 @@ Add the following to your `Cargo.toml`:
 sofia-sip = "0.1.0"
 ```
 
-Also, make sure you have sofia-sip C library installed in your system (`pkg-config sofia-sip-ua --modversion` is working), in ubuntu and other debian based systems, you can install it by doing:
+Make sure you have sofia-sip C library installed in your system (`pkg-config sofia-sip-ua --modversion` is working), in ubuntu and other debian based systems, you can install it by doing:
 
 ```bash
 sudo apt install libsofia-sip-ua-dev
 ```
 
 Future versions will have an option (via cargo features) to build and bundle C sofia-sip as a static library.
+
+Also, clang/libclang and c headers are required to compile sofia-sip
+
+```bash
+sudo apt install libclang1 clang
+```
 
 ### Example
 
