@@ -115,11 +115,21 @@ mod tests {
 
     #[test]
     fn test_tagi_t_as_string_nu_url() {
-        let tag = Tag::NuUrl("sip:800@localhost:5080");
+        let tag = Tag::NuUrl("800@localhost");
         let tagi = tag.item();
         assert_eq!(
             tagi_t_as_string(&tagi as *const sys::tagi_t),
-            "nua::url: <sip:800@localhost:5080>"
+            "nua::url: <800@localhost>"
+        );
+    }
+
+    #[test]
+    fn test_tagi_t_as_string_null() {
+        let tag = Tag::Null;
+        let tagi = tag.item();
+        assert_eq!(
+            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            "::tag_null: 0"
         );
     }
 }
