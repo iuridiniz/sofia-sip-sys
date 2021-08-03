@@ -76,3 +76,50 @@ impl Tag {
     //     Tag::_NuUrl(CString::new(url).expect("unexpected '\0' character"))
     // }
 }
+
+/// Convert a tag to a String.
+pub(crate) fn tagi_t_as_string(sys_tagi_ptr: *const sys::tagi_t) -> String {
+    assert!(!sys_tagi_ptr.is_null());
+    /* first read length of c string */
+    let len = unsafe { sys::t_snprintf(sys_tagi_ptr, std::ptr::null_mut(), 0) } as usize;
+
+    /* create a buf to store c string plus '\0' */
+    let buf_len: usize = len + 1;
+    let mut buf: Vec<u8> = vec![0; buf_len];
+    unsafe { sys::t_snprintf(sys_tagi_ptr, buf.as_mut_ptr() as *mut i8, buf_len as u64) };
+    String::from_utf8_lossy(&buf[..len]).to_string()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_tagi_t_as_string_nu_m_display() {
+        let tag = Tag::NuMDisplay("foo");
+        let tagi = tag.item();
+        assert_eq!(
+            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            "nua::m_display: \"foo\""
+        );
+    }
+
+    #[test]
+    fn test_tagi_t_as_string_nu_m_username() {
+        let tag = Tag::NuMUsername("foo bar");
+        let tagi = tag.item();
+        assert_eq!(
+            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            "nua::m_username: \"foo bar\""
+        );
+    }
+
+    #[test]
+    fn test_tagi_t_as_string_nu_url() {
+        let tag = Tag::NuUrl("sip:800@localhost:5080");
+        let tagi = tag.item();
+        assert_eq!(
+            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            "nua::url: <sip:800@localhost:5080>"
+        );
+    }
+}

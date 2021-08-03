@@ -59,11 +59,9 @@ fn main() {
         .allowlist_function("nua_invite") /* no namespaced, but it needs a nua_handle */
         // .allowlist_type("nua_t")
         // .allowlist_type("nua_s")
-        /* tags */
+        /* tags: su_tag.h */
         .allowlist_function("tl_len")
         .allowlist_function("t_snprintf")
-        // .allowlist_function("urltag_url_v")
-        // .allowlist_function("tag_str_v")
         .allowlist_type("tagi_t")
         .allowlist_type("tag_type_t")
         .allowlist_type("tag_value_t")
@@ -72,6 +70,7 @@ fn main() {
         .allowlist_var("tag_next")
         .allowlist_var("tag_any")
         .allowlist_var("tag_filter")
+        /* tags: sip_tag.h sip_tag.h.in */
         .allowlist_var("siptag_subject_str")
         .allowlist_var("siptag_content_type_str")
         .allowlist_var("siptag_payload_str")
