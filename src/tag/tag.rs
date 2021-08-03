@@ -16,6 +16,9 @@ macro_rules! tag_cstring {
 pub enum Tag {
     _PlaceHolder(CString),
     _NuUrl(CString),
+    _NuMUsername(CString),
+    _NuMDisplay(CString),
+    _SoaUserSdpStr(CString),
     _SipSubjectStr(CString),
     _SipContentTypeStr(CString),
     _SipPayloadStr(CString),
@@ -28,6 +31,9 @@ impl Tag {
         match self {
             Tag::_PlaceHolder(_) => std::ptr::null() as sys::tag_type_t,
             Tag::_NuUrl(_) => unsafe { sys::nutag_url.as_ptr() },
+            Tag::_NuMUsername(_) => unsafe { sys::nutag_m_username.as_ptr() },
+            Tag::_NuMDisplay(_) => unsafe { sys::nutag_m_display.as_ptr() },
+            Tag::_SoaUserSdpStr(_) => unsafe { sys::soatag_user_sdp_str.as_ptr() },
             Tag::_SipSubjectStr(_) => unsafe { sys::siptag_subject_str.as_ptr() },
             Tag::_SipContentTypeStr(_) => unsafe { sys::siptag_content_type_str.as_ptr() },
             Tag::_SipPayloadStr(_) => unsafe { sys::siptag_payload_str.as_ptr() },
@@ -39,6 +45,9 @@ impl Tag {
         match self {
             Tag::_PlaceHolder(cstring)
             | Tag::_NuUrl(cstring)
+            | Tag::_NuMUsername(cstring)
+            | Tag::_NuMDisplay(cstring)
+            | Tag::_SoaUserSdpStr(cstring)
             | Tag::_SipSubjectStr(cstring)
             | Tag::_SipContentTypeStr(cstring)
             | Tag::_SipPayloadStr(cstring)
@@ -55,6 +64,9 @@ impl Tag {
     }
 
     tag_cstring!(_NuUrl, NuUrl);
+    tag_cstring!(_NuMUsername, NuMUsername);
+    tag_cstring!(_NuMDisplay, NuMDisplay);
+    tag_cstring!(_SoaUserSdpStr, SoaUserSdpStr);
     tag_cstring!(_SipSubjectStr, SipSubjectStr);
     tag_cstring!(_SipContentTypeStr, SipContentTypeStr);
     tag_cstring!(_SipPayloadStr, SipPayloadStr);

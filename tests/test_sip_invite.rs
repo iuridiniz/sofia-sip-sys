@@ -35,7 +35,7 @@ fn wrap(f: fn()) {
 #[adorn(wrap)]
 #[serial]
 fn test_case_basic_call_incomplete() {
-    // see <lib-sofia-ua-c>/tests/test_basic_call.c::test_basic_call1
+    // see <lib-sofia-ua-c>/tests/test_basic_call.c::test_basic_call_1
     // A                    B
     // |-------INVITE------>|
     // |<----100 Trying-----|
@@ -109,7 +109,6 @@ fn test_case_basic_call_incomplete() {
                     "[NUA _B]Event: {:?} // status: {:?} // phrase: {:?}",
                     &event, &status, &phrase
                 );
-                // println!("[NUA _B]Event: {:?}", &event);
                 match event {
                     _ => {}
                 }
@@ -128,7 +127,6 @@ fn test_case_basic_call_incomplete() {
              sip: Sip,
              tags: Vec<Tag>| {
                 // dbg!(&nua, &event, &status, &phrase, &handle, &sip, &tags);
-                // println!("[NUA A_]Event: {:?}", &event);
                 println!(
                     "[NUA A_]Event: {:?} // status: {:?} // phrase: {:?}",
                     &event, &status, &phrase
@@ -149,7 +147,12 @@ fn test_case_basic_call_incomplete() {
     };
     dbg!(&handle);
 
-    let tags = TagBuilder::default().collect();
+    let tags = TagBuilder::default()
+        .tag(Tag::NuUrl(nua_b_url))
+        .tag(Tag::SoaUserSdpStr("m=audio 5008 RTP/AVP 8"))
+        .tag(Tag::NuMUsername("a+a"))
+        .tag(Tag::NuMDisplay("Alice"))
+        .collect();
 
     handle.invite(&tags);
 

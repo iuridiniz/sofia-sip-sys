@@ -54,6 +54,7 @@ fn main() {
         .allowlist_function("nua_handle_destroy")
         .allowlist_function("nua_handle_has_active_call")
         .allowlist_function("nua_handle_has_call_on_hold")
+        .allowlist_function("nua_handle_unref")
         .allowlist_function("nua_message") /* no namespaced, but it needs a nua_handle */
         .allowlist_function("nua_invite") /* no namespaced, but it needs a nua_handle */
         // .allowlist_type("nua_t")
@@ -61,8 +62,8 @@ fn main() {
         /* tags */
         .allowlist_function("tl_len")
         .allowlist_function("t_snprintf")
-        .allowlist_function("urltag_url_v")
-        .allowlist_function("tag_str_v")
+        // .allowlist_function("urltag_url_v")
+        // .allowlist_function("tag_str_v")
         .allowlist_type("tagi_t")
         .allowlist_type("tag_type_t")
         .allowlist_type("tag_value_t")
@@ -75,8 +76,12 @@ fn main() {
         .allowlist_var("siptag_content_type_str")
         .allowlist_var("siptag_payload_str")
         .allowlist_var("siptag_to_str")
+        /* tags: soa_tag.h */
         .allowlist_var("soatag_user_sdp_str")
+        /* tags: nua_tag.h */
         .allowlist_var("nutag_url")
+        .allowlist_var("nutag_m_username")
+        .allowlist_var("nutag_m_display")
         /* sip.h */
         .allowlist_type("sip_t")
         /* url.h */
