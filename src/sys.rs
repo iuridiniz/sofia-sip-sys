@@ -9,7 +9,7 @@
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 /// Reimplementation of inline t_next function from su_tag_inline.h
-pub fn t_next(t: *const tagi_t) -> *const tagi_t {
+pub unsafe fn t_next(t: *const tagi_t) -> *const tagi_t {
     let tt: tag_type_s;
     let tt_class: tag_class_t;
     let tc_next: Option<unsafe extern "C" fn(*const tagi_t) -> *const tagi_t>;
@@ -17,36 +17,30 @@ pub fn t_next(t: *const tagi_t) -> *const tagi_t {
     /*
     C code equivalent:
 
+    tagi_t const *t_next(tagi_t const *t) {
+
         tag_type_t tt = (t) && (t)->t_tag ? (t)->t_tag : tag_null;
 
         if (tt->tt_class->tc_next)
             return tt->tt_class->tc_next(t);
         else
             return t + 1;
+    }
+
     */
 
-    // dbg!(t);
-
-    if !t.is_null() {
-        let tt_ptr = unsafe { (*t).t_tag };
-        // dbg!(tt_ptr);
-        if !tt_ptr.is_null() {
-            tt = unsafe { *(tt_ptr) };
-        } else {
-            tt = unsafe { *(tag_null.as_ptr()) };
-        }
+    if !t.is_null() && !(*t).t_tag.is_null() {
+        tt = *((*t).t_tag);
     } else {
-        tt = unsafe { *(tag_null.as_ptr()) };
+        tt = *(tag_null.as_ptr());
     }
-    // dbg!(tt);
 
-    tt_class = unsafe { *tt.tt_class };
-    // dbg!(tt_class);
+    tt_class = *(tt.tt_class);
     tc_next = tt_class.tc_next;
     if let Some(tc_next) = tc_next {
-        return unsafe { tc_next(t) };
+        return tc_next(t);
     } else {
-        return unsafe { t.offset(1) };
+        return t.offset(1);
     }
 }
 
@@ -477,7 +471,7 @@ mod tests {
     }
     #[test]
     fn test_t_next_null() {
-        let lst = sys::t_next(std::ptr::null() as *const sys::tagi_t);
+        let lst = unsafe { sys::t_next(std::ptr::null() as *const sys::tagi_t) };
         assert!(lst.is_null());
     }
 
@@ -487,7 +481,7 @@ mod tests {
             t_value: 0,
             t_tag: std::ptr::null(),
         };
-        let lst = sys::t_next(&tagi as *const sys::tagi_t);
+        let lst = unsafe { sys::t_next(&tagi as *const sys::tagi_t) };
         assert!(lst.is_null());
     }
 }
