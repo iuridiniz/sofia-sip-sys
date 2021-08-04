@@ -8,6 +8,48 @@
 #![allow(deref_nullptr)]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+/// Reimplementation of inline t_next function from su_tag_inline.h
+pub fn t_next(t: *const tagi_t) -> *const tagi_t {
+    let tt: tag_type_s;
+    let tt_class: tag_class_t;
+    let tc_next: Option<unsafe extern "C" fn(*const tagi_t) -> *const tagi_t>;
+
+    /*
+    C code equivalent:
+
+        tag_type_t tt = (t) && (t)->t_tag ? (t)->t_tag : tag_null;
+
+        if (tt->tt_class->tc_next)
+            return tt->tt_class->tc_next(t);
+        else
+            return t + 1;
+    */
+
+    // dbg!(t);
+
+    if !t.is_null() {
+        let tt_ptr = unsafe { (*t).t_tag };
+        // dbg!(tt_ptr);
+        if !tt_ptr.is_null() {
+            tt = unsafe { *(tt_ptr) };
+        } else {
+            tt = unsafe { *(tag_null.as_ptr()) };
+        }
+    } else {
+        tt = unsafe { *(tag_null.as_ptr()) };
+    }
+    // dbg!(tt);
+
+    tt_class = unsafe { *tt.tt_class };
+    // dbg!(tt_class);
+    tc_next = tt_class.tc_next;
+    if let Some(tc_next) = tc_next {
+        return unsafe { tc_next(t) };
+    } else {
+        return unsafe { t.offset(1) };
+    }
+}
+
 #[cfg(test)]
 mod tests {
     // https://chromium.googlesource.com/chromiumos/docs/+/master/constants/errnos.md
@@ -432,5 +474,20 @@ mod tests {
             sys::su_deinit();
             assert_eq!(errno(), ERROR_NONE);
         }
+    }
+    #[test]
+    fn test_t_next_null() {
+        let lst = sys::t_next(std::ptr::null() as *const sys::tagi_t);
+        assert!(lst.is_null());
+    }
+
+    #[test]
+    fn test_t_next_tag_null() {
+        let tagi = sys::tagi_t {
+            t_value: 0,
+            t_tag: std::ptr::null(),
+        };
+        let lst = sys::t_next(&tagi as *const sys::tagi_t);
+        assert!(lst.is_null());
     }
 }
