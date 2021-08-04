@@ -75,61 +75,59 @@ impl Tag {
     // pub fn NuUrl(url: &str) -> Self {
     //     Tag::_NuUrl(CString::new(url).expect("unexpected '\0' character"))
     // }
+
+    /// Convert tag item (sys::tagi_t) to a String
+    pub(crate) fn _tagi_t_to_string(sys_tagi_ptr: *const sys::tagi_t) -> String {
+        assert!(!sys_tagi_ptr.is_null());
+        /* first read length of c string */
+        let len = unsafe { sys::t_snprintf(sys_tagi_ptr, std::ptr::null_mut(), 0) } as usize;
+
+        /* create a buf to store c string plus '\0' */
+        let buf_len: usize = len + 1;
+        let mut buf: Vec<u8> = vec![0; buf_len];
+        unsafe { sys::t_snprintf(sys_tagi_ptr, buf.as_mut_ptr() as *mut i8, buf_len as u64) };
+        String::from_utf8_lossy(&buf[..len]).to_string()
+    }
+
+    /// Convert tag to a String using sofia representation.
+    pub fn sofia_string(&self) -> String {
+        let tagi = self.item();
+        return Self::_tagi_t_to_string(&tagi);
+    }
 }
 
-/// Convert a tag to a String.
-pub(crate) fn tagi_t_as_string(sys_tagi_ptr: *const sys::tagi_t) -> String {
-    assert!(!sys_tagi_ptr.is_null());
-    /* first read length of c string */
-    let len = unsafe { sys::t_snprintf(sys_tagi_ptr, std::ptr::null_mut(), 0) } as usize;
-
-    /* create a buf to store c string plus '\0' */
-    let buf_len: usize = len + 1;
-    let mut buf: Vec<u8> = vec![0; buf_len];
-    unsafe { sys::t_snprintf(sys_tagi_ptr, buf.as_mut_ptr() as *mut i8, buf_len as u64) };
-    String::from_utf8_lossy(&buf[..len]).to_string()
-}
+/// Convert a list of sys::tagi_t to a String.
+// pub(crate) fn tagi_t_list_as_string(lst: *const sys::tagi_t) -> String {
+//     let mut output = String::new();
+//     let mut lst = lst;
+//     while !lst.is_null() {
+//         let s = tagi_t_as_string(lst);
+//         output.push_str(&s);
+//         output.push_str("\n");
+//         lst = sys::t_next(lst);
+//     }
+//     return output;
+// }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
-    fn test_tagi_t_as_string_nu_m_display() {
-        let tag = Tag::NuMDisplay("foo");
-        let tagi = tag.item();
+    fn test_sofia_string() {
+        assert_eq!(Tag::Null.sofia_string(), "::tag_null: 0");
+
         assert_eq!(
-            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            Tag::NuMDisplay("foo").sofia_string(),
             "nua::m_display: \"foo\""
         );
-    }
-
-    #[test]
-    fn test_tagi_t_as_string_nu_m_username() {
-        let tag = Tag::NuMUsername("foo bar");
-        let tagi = tag.item();
         assert_eq!(
-            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            Tag::NuMUsername("foo bar").sofia_string(),
             "nua::m_username: \"foo bar\""
         );
-    }
-
-    #[test]
-    fn test_tagi_t_as_string_nu_url() {
-        let tag = Tag::NuUrl("800@localhost");
-        let tagi = tag.item();
         assert_eq!(
-            tagi_t_as_string(&tagi as *const sys::tagi_t),
+            Tag::NuUrl("800@localhost").sofia_string(),
             "nua::url: <800@localhost>"
-        );
-    }
-
-    #[test]
-    fn test_tagi_t_as_string_null() {
-        let tag = Tag::Null;
-        let tagi = tag.item();
-        assert_eq!(
-            tagi_t_as_string(&tagi as *const sys::tagi_t),
-            "::tag_null: 0"
         );
     }
 }
