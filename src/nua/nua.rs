@@ -9,7 +9,7 @@ pub use crate::nua::event::EventClosure;
 pub use crate::nua::handle::Handle;
 use crate::sip::Sip;
 use crate::tag::builder::Builder;
-use crate::tag::Tag;
+use crate::tag::tag::Tag;
 
 use std::convert::TryFrom;
 use std::ffi::CStr;
@@ -232,6 +232,20 @@ impl<'a> Drop for Nua<'a> {
     }
 }
 
+/// Convert a list of sys::tagi_t to a String.
+#[allow(dead_code)]
+fn tagi_t_list_as_string(lst: *const sys::tagi_t) -> String {
+    let mut output = String::new();
+    let mut lst = lst;
+    while !lst.is_null() {
+        let s = crate::tag::tag::TagItem::_tagi_t_to_string(lst);
+        output.push_str(&s);
+        output.push_str("\n");
+        lst = unsafe { sys::t_next(lst) };
+    }
+    return output;
+}
+
 /// Called from C code, it will convert C types to Rust types and call Rust function with these types
 extern "C" fn nua_callback_glue(
     _event: sys::nua_event_t,
@@ -285,7 +299,12 @@ extern "C" fn nua_callback_glue(
             // handle_struct = Some(handle_struct_temp);
         }
 
-        let tags = Vec::<Tag>::new();
+        // println!(
+        //     "-[tags start]-\n{}\n-[tags end]-",
+        //     tagi_t_list_as_string(_tags)
+        // );
+        let tags = Builder::_from_sys(_tags).collect();
+        // dbg!(&tags);
 
         // if !_tags.is_null() {
         // loop {

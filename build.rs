@@ -81,6 +81,7 @@ fn main() {
         .allowlist_var("nutag_url")
         .allowlist_var("nutag_m_username")
         .allowlist_var("nutag_m_display")
+        .allowlist_var("nutag_callstate")
         /* sip.h */
         .allowlist_type("sip_t")
         /* url.h */

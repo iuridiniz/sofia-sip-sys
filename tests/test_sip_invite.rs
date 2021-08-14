@@ -157,6 +157,7 @@ fn test_case_basic_call_incomplete() {
     handle.invite(&tags);
 
     Root::get_default_root().unwrap().step0();
+    Root::get_default_root().unwrap().step0();
 
     println!("--> Test end");
     // assert!(false);

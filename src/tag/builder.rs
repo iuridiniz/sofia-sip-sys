@@ -70,6 +70,29 @@ impl Builder {
     pub(crate) fn _create_vec_tag_items(tags: &[Tag]) -> Vec<TagItem> {
         tags.into_iter().map(|tag| tag.into()).collect()
     }
+
+    pub(crate) fn _from_sys(list_sys_tags: *const sys::tagi_t) -> Self {
+        let mut b = Self::default();
+        let mut list_sys_tags = list_sys_tags;
+        if list_sys_tags.is_null() {
+            return b;
+        }
+        while !list_sys_tags.is_null() {
+            let tagi = unsafe { *list_sys_tags };
+            list_sys_tags = unsafe { sys::t_next(list_sys_tags) };
+
+            if tagi.t_tag.is_null() {
+                continue;
+            }
+            let tag_item = TagItem::_from_sys(&tagi);
+            if let TagItem::Null = tag_item {
+                break;
+            }
+            b = b.tag(tag_item.into());
+        }
+
+        b
+    }
 }
 
 #[cfg(test)]
@@ -136,4 +159,7 @@ mod test {
         let res = Builder::default().siptag_to_str("900@localhost").collect();
         assert_eq!(res[0], Tag::SipToStr("900@localhost".to_string()));
     }
+
+    #[test]
+    fn test_builder_from_sys() {}
 }
