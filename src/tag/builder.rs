@@ -7,18 +7,6 @@ pub struct Builder {
     tags: Vec<Tag>,
 }
 
-pub(crate) fn convert_tags(tags: &[TagItem]) -> Vec<sys::tagi_t> {
-    let mut sys_tags = Vec::<sys::tagi_t>::with_capacity(tags.len() + 1);
-    for tag in tags {
-        sys_tags.push(tag.item());
-    }
-
-    /* last tag must be TAG_END or TAG_NULL */
-    let tag_null = TagItem::Null;
-    sys_tags.push(tag_null.item());
-    sys_tags
-}
-
 impl Builder {
     pub fn default() -> Self {
         Builder {
@@ -65,6 +53,22 @@ impl Builder {
 
     pub fn collect(self) -> Vec<Tag> {
         self.tags
+    }
+
+    /* aux funcs */
+    pub(crate) fn _create_vec_sys_tags(tags: &[TagItem]) -> Vec<sys::tagi_t> {
+        let mut sys_tags = Vec::<sys::tagi_t>::with_capacity(tags.len() + 1);
+        for tag in tags {
+            sys_tags.push(tag.item());
+        }
+        /* last tag must be TAG_END or TAG_NULL */
+        let tag_null = TagItem::Null;
+        sys_tags.push(tag_null.item());
+        sys_tags
+    }
+
+    pub(crate) fn _create_vec_tag_items(tags: &[Tag]) -> Vec<TagItem> {
+        tags.into_iter().map(|tag| tag.into()).collect()
     }
 }
 

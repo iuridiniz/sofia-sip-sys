@@ -8,8 +8,7 @@ pub use crate::nua::event::Event;
 pub use crate::nua::event::EventClosure;
 pub use crate::nua::handle::Handle;
 use crate::sip::Sip;
-use crate::tag::builder::convert_tags;
-use crate::tag::tag::TagItem;
+use crate::tag::builder::Builder;
 use crate::tag::Tag;
 
 use std::convert::TryFrom;
@@ -55,14 +54,14 @@ impl<'a> Nua<'a> {
         let nua_ptr = &mut *nua as *mut Nua as *mut sys::nua_magic_t;
 
         let c_root = root.c_ptr;
-        /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
-        /* Intermediate TagItem is necessary due c pointers */
-        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
-        let sys_tags = convert_tags(&tag_items);
-        let sys_tags = sys_tags.as_slice();
-
         let c_callback = nua_callback_glue;
         let magic = nua_ptr;
+
+        /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
+        /* Intermediate Vec<TagItem> is necessary to hold c pointers (avoid be freed) when we call create */
+        let tag_items = Builder::_create_vec_tag_items(tags);
+        let sys_tags = Builder::_create_vec_sys_tags(&tag_items);
+        let sys_tags = sys_tags.as_slice();
 
         nua.c_ptr = Self::_create(c_root, Some(c_callback), magic, Some(sys_tags))?;
         nua.root = Some(root);

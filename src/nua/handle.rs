@@ -2,8 +2,7 @@ use crate::error::Error;
 use crate::nua::Nua;
 use crate::result::Result;
 use crate::sys;
-use crate::tag::builder::convert_tags;
-use crate::tag::tag::TagItem;
+use crate::tag::builder::Builder;
 use crate::tag::Tag;
 
 /// NUA transaction handle.
@@ -28,9 +27,9 @@ impl<'a> Handle<'a> {
         let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
 
         /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
-        /* Intermediate TagItem is necessary due c pointers */
-        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
-        let sys_tags = convert_tags(&tag_items);
+        /* Intermediate Vec<TagItem> is necessary to hold c pointers when we call create */
+        let tag_items = Builder::_create_vec_tag_items(tags);
+        let sys_tags = Builder::_create_vec_sys_tags(&tag_items);
         let sys_tags = sys_tags.as_slice();
 
         let magic = handle_ptr;
@@ -95,9 +94,9 @@ impl<'a> Handle<'a> {
     /// Send an instant message.
     pub fn message(&self, tags: &[Tag]) {
         /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
-        /* Intermediate TagItem is necessary due c pointers */
-        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
-        let sys_tags = convert_tags(&tag_items);
+        /* Intermediate Vec<TagItem> is necessary to hold c pointers (avoid be freed) when we call create */
+        let tag_items = Builder::_create_vec_tag_items(tags);
+        let sys_tags = Builder::_create_vec_sys_tags(&tag_items);
         let sys_tags = sys_tags.as_slice();
 
         let nh = self.c_ptr;
@@ -127,9 +126,9 @@ impl<'a> Handle<'a> {
     /// Place a call using SIP INVITE method.
     pub fn invite(&self, tags: &[Tag]) {
         /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
-        /* Intermediate TagItem is necessary due c pointers */
-        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
-        let sys_tags = convert_tags(&tag_items);
+        /* Intermediate Vec<TagItem> is necessary to hold c pointers (avoid be freed) when we call create */
+        let tag_items = Builder::_create_vec_tag_items(tags);
+        let sys_tags = Builder::_create_vec_sys_tags(&tag_items);
         let sys_tags = sys_tags.as_slice();
 
         let nh = self.c_ptr;
