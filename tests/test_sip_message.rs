@@ -74,12 +74,12 @@ fn test_case_nua_send_message_to_itself() {
     |------------------->[_]
     |                     |
     */
-    let my_message = "Hi\n";
+    let my_message = String::from("Hi\n");
     let root = Root::create().unwrap();
-    let url = Rc::new("sip:127.0.0.1:9997");
+    let url = String::from("sip:127.0.0.1:9997");
 
     let mut nua = {
-        let url = Tag::NuUrl(&url.clone());
+        let url = Tag::NuUrl(url.clone());
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create_with_root(&root, &tags).unwrap()
     };
@@ -121,24 +121,24 @@ fn test_case_nua_send_message_to_itself() {
 
     let handle = {
         let tags = TagBuilder::default()
-            .tag(Tag::SipToStr(&url.clone()))
-            .tag(Tag::NuUrl(&url.clone()))
+            .tag(Tag::SipToStr(url.clone()))
+            .tag(Tag::NuUrl(url.clone()))
             .collect();
         Handle::create(&nua, &tags).unwrap()
     };
 
     let tags = TagBuilder::default()
-        .tag(Tag::SipSubjectStr("NUA"))
-        .tag(Tag::SipToStr(&url.clone()))
-        .tag(Tag::NuUrl(&url.clone()))
-        .tag(Tag::SipContentTypeStr("text/plain"))
-        .tag(Tag::SipPayloadStr(my_message))
+        .tag(Tag::SipSubjectStr("NUA".into()))
+        .tag(Tag::SipToStr(url.clone()))
+        .tag(Tag::NuUrl(url.clone()))
+        .tag(Tag::SipContentTypeStr("text/plain".into()))
+        .tag(Tag::SipPayloadStr(my_message.clone()))
         .collect();
 
     handle.message(&tags);
     root.sleep(0);
 
-    assert_eq!(&*recv_message.borrow(), my_message);
+    assert_eq!(&*recv_message.borrow(), &my_message);
 }
 
 #[test]
@@ -171,15 +171,15 @@ fn test_case_nua_a_send_message_to_nua_b() {
     |                     |                     |                     |
 
     */
-    let nua_a_url = "sip:127.0.0.1:5080";
+    let nua_a_url = String::from("sip:127.0.0.1:5080");
     let mut nua_a = {
-        let url = Tag::NuUrl(nua_a_url);
+        let url = Tag::NuUrl(nua_a_url.clone());
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
-    let nua_b_url = "sip:127.0.0.1:5081";
+    let nua_b_url = String::from("sip:127.0.0.1:5081");
     let mut nua_b = {
-        let url = Tag::NuUrl(nua_b_url);
+        let url = Tag::NuUrl(nua_b_url.clone());
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
@@ -241,22 +241,22 @@ fn test_case_nua_a_send_message_to_nua_b() {
             },
         );
     }
-    let my_message = "Hi Sofia SIP\n";
+    let my_message = String::from("Hi Sofia SIP\n");
 
     let handle = {
         let tags = TagBuilder::default()
-            .tag(Tag::SipToStr(nua_b_url))
-            .tag(Tag::NuUrl(nua_b_url))
+            .tag(Tag::SipToStr(nua_b_url.clone()))
+            .tag(Tag::NuUrl(nua_b_url.clone()))
             .collect();
         Handle::create(&nua_a, &tags).unwrap()
     };
 
     let tags = TagBuilder::default()
-        .tag(Tag::SipSubjectStr("NUA"))
-        .tag(Tag::SipToStr(nua_b_url))
-        .tag(Tag::NuUrl(nua_b_url))
-        .tag(Tag::SipContentTypeStr("text/plain"))
-        .tag(Tag::SipPayloadStr(my_message))
+        .tag(Tag::SipSubjectStr("NUA".into()))
+        .tag(Tag::SipToStr(nua_b_url.clone()))
+        .tag(Tag::NuUrl(nua_b_url.clone()))
+        .tag(Tag::SipContentTypeStr("text/plain".into()))
+        .tag(Tag::SipPayloadStr(my_message.clone()))
         .collect();
 
     handle.message(&tags);
@@ -265,5 +265,5 @@ fn test_case_nua_a_send_message_to_nua_b() {
     // Root::get_default_root().unwrap().sleep(0);
     println!("--> Root run end");
 
-    assert_eq!(&*recv_message.borrow(), my_message);
+    assert_eq!(&*recv_message.borrow(), &my_message);
 }

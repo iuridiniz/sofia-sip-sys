@@ -83,13 +83,13 @@ fn test_case_basic_call_incomplete() {
     // |                     |                     |                     |
     let nua_a_url = "sip:127.0.0.1:5080";
     let mut nua_a = {
-        let url = Tag::NuUrl(nua_a_url);
+        let url = Tag::NuUrl(nua_a_url.into());
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
     let nua_b_url = "sip:127.0.0.1:5081";
     let mut nua_b = {
-        let url = Tag::NuUrl(nua_b_url);
+        let url = Tag::NuUrl(nua_b_url.into());
         let tags = TagBuilder::default().tag(url).collect();
         Nua::create(&tags).unwrap()
     };
@@ -140,18 +140,18 @@ fn test_case_basic_call_incomplete() {
 
     let handle = {
         let tags = TagBuilder::default()
-            .tag(Tag::SipToStr(nua_b_url))
-            .tag(Tag::NuUrl(nua_b_url))
+            .tag(Tag::SipToStr(nua_b_url.into()))
+            .tag(Tag::NuUrl(nua_b_url.into()))
             .collect();
         Handle::create(&nua_a, &tags).unwrap()
     };
     dbg!(&handle);
 
     let tags = TagBuilder::default()
-        .tag(Tag::NuUrl(nua_b_url))
-        .tag(Tag::SoaUserSdpStr("m=audio 5008 RTP/AVP 8"))
-        .tag(Tag::NuMUsername("a+a"))
-        .tag(Tag::NuMDisplay("Alice"))
+        .tag(Tag::NuUrl(nua_b_url.into()))
+        .tag(Tag::SoaUserSdpStr("m=audio 5008 RTP/AVP 8".into()))
+        .tag(Tag::NuMUsername("a+a".into()))
+        .tag(Tag::NuMDisplay("Alice".into()))
         .collect();
 
     handle.invite(&tags);

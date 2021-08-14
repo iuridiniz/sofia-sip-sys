@@ -3,6 +3,7 @@ use crate::nua::Nua;
 use crate::result::Result;
 use crate::sys;
 use crate::tag::builder::convert_tags;
+use crate::tag::tag::TagItem;
 use crate::tag::Tag;
 
 /// NUA transaction handle.
@@ -26,8 +27,12 @@ impl<'a> Handle<'a> {
         let mut handle = Box::new(Self::_new());
         let handle_ptr = &mut *handle as *mut Handle as *mut sys::nua_hmagic_t;
 
-        let tags = convert_tags(&tags);
-        let sys_tags = tags.as_slice();
+        /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
+        /* Intermediate TagItem is necessary due c pointers */
+        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
+        let sys_tags = convert_tags(&tag_items);
+        let sys_tags = sys_tags.as_slice();
+
         let magic = handle_ptr;
         handle.c_ptr = Handle::_create(nua.c_ptr, magic, Some(sys_tags))?;
         handle.nua = Some(nua);
@@ -89,8 +94,11 @@ impl<'a> Handle<'a> {
     }
     /// Send an instant message.
     pub fn message(&self, tags: &[Tag]) {
-        let tags = convert_tags(tags);
-        let sys_tags = tags.as_slice();
+        /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
+        /* Intermediate TagItem is necessary due c pointers */
+        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
+        let sys_tags = convert_tags(&tag_items);
+        let sys_tags = sys_tags.as_slice();
 
         let nh = self.c_ptr;
         Self::_message(nh, Some(sys_tags))
@@ -118,8 +126,11 @@ impl<'a> Handle<'a> {
 
     /// Place a call using SIP INVITE method.
     pub fn invite(&self, tags: &[Tag]) {
-        let tags = convert_tags(tags);
-        let sys_tags = tags.as_slice();
+        /* Convert &[Tag] -> &[TagItem] -> &[sys::tagi_t] */
+        /* Intermediate TagItem is necessary due c pointers */
+        let tag_items: Vec<TagItem> = tags.into_iter().map(|tag| tag.into()).collect();
+        let sys_tags = convert_tags(&tag_items);
+        let sys_tags = sys_tags.as_slice();
 
         let nh = self.c_ptr;
         Self::_invite(nh, Some(sys_tags))

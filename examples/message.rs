@@ -39,7 +39,6 @@ fn main() {
     |                     |
     |                     |
     */
-
     /* bind on :5080 */
     let sip_bind_url = "sip:*:5080";
 
@@ -47,9 +46,7 @@ fn main() {
     let sip_to_url = "sip:600@192.168.0.51:5060";
 
     /* build params for Nua::create */
-    let tags = TagBuilder::default()
-        .tag(Tag::NuUrl(sip_bind_url))
-        .collect();
+    let tags = TagBuilder::default().nutag_url(sip_bind_url).collect();
 
     /* create NUA stack */
     let mut nua = Nua::create(&tags).unwrap();
@@ -95,22 +92,22 @@ fn main() {
     /* Message to be send */
     let my_message = "Hi Sofia-SIP-sys";
 
-    /* build params for Handle::create */
+    /* build params for Handle::create [Similar to C sofia] */
     let tags = TagBuilder::default()
-        .tag(Tag::SipToStr(sip_to_url))
-        .tag(Tag::NuUrl(sip_to_url))
+        .siptag_to_str(sip_to_url)
+        .nutag_url(sip_bind_url)
         .collect();
 
     /* create operation handle */
     let handle = Handle::create(&nua, &tags).unwrap();
 
-    /* build params for handle.message() */
+    /* build params for handle.message() [Alternative] */
     let tags = TagBuilder::default()
-        .tag(Tag::SipSubjectStr("NUA"))
-        .tag(Tag::SipToStr(sip_to_url))
-        .tag(Tag::NuUrl(sip_to_url))
-        .tag(Tag::SipContentTypeStr("text/plain"))
-        .tag(Tag::SipPayloadStr(my_message))
+        .tag(Tag::SipSubjectStr("NUA".into()))
+        .tag(Tag::SipToStr(sip_to_url.into()))
+        .tag(Tag::NuUrl(sip_to_url.into()))
+        .tag(Tag::SipContentTypeStr("text/plain".into()))
+        .tag(Tag::SipPayloadStr(my_message.into()))
         .collect();
 
     /* The message() function enqueue a SIP MESSAGE on NUA STACK */
